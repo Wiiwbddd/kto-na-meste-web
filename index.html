@@ -37,6 +37,12 @@ input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;ma
 .btns{display:flex;flex-wrap:wrap;gap:6px}
 .btns button,.row button{white-space:nowrap}
 html,body{overflow-x:hidden}
+.pw{margin-bottom:8px}.pw .p{margin-bottom:0;border-radius:10px 10px 0 0}
+.note{background:#fff;padding:6px 14px 10px 20px;border-radius:0 0 10px 10px;font-size:14px;color:var(--mute);cursor:pointer;border-top:1px dashed var(--line)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.md{background:#fff;border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:640px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chips button{color:var(--ink)}
 .log{padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
 .log span{color:var(--mute);font-size:13px;display:block}
 .err{color:var(--no);margin:6px 0;min-height:20px}
@@ -62,11 +68,14 @@ h2{font-size:16px;margin:0 0 10px}
 <div id="app" class="hide">
   <div class="tabs" id="tabs">
     <button data-t="list" class="on">Список</button>
+    <button data-t="rating">Рейтинг</button>
     <button data-t="logs" class="hide" id="tlogs">Логи</button>
     <button data-t="admin" class="hide" id="tadmin">Админ</button>
   </div>
 
   <section id="list"><p class="cnt" id="cnt"></p><div id="people"></div></section>
+
+  <section id="rating" class="hide"><div class="box"><h2>Кто больше всех отмечает</h2><div id="ratebox"></div></div></section>
 
   <section id="logs" class="hide">
     <div class="box">
@@ -86,6 +95,15 @@ h2{font-size:16px;margin:0 0 10px}
       <div id="ulist"></div>
     </div>
     <div class="box">
+      <h2>Отметки</h2>
+      <button id="resetall" style="width:100%">Сбросить дату и «кто отметил» у всех</button>
+    </div>
+    <div class="box">
+      <h2>Рейтинг (правка)</h2>
+      <div id="arate"></div>
+      <button id="ratezero" class="ghost" style="width:100%;margin-top:8px;color:var(--ink)">Обнулить весь рейтинг</button>
+    </div>
+    <div class="box">
       <h2>Очистка логов</h2>
       <div style="display:flex;gap:8px"><input id="days" type="number" min="0" value="30" style="margin:0"><button id="clr">Удалить старше N дней</button></div>
       <div class="err" id="clrmsg" style="color:var(--mute)"></div>
@@ -95,6 +113,12 @@ h2{font-size:16px;margin:0 0 10px}
 
 </main>
 
+<div id="nm" class="ov hide"><div class="md">
+  <h2 id="nmt">Примечание</h2>
+  <div class="chips" id="chips"></div>
+  <input id="nmi" placeholder="Например: ушёл на час (пусто = убрать)" maxlength="80">
+  <div style="display:flex;gap:8px"><button id="nms" style="flex:1">Сохранить</button><button class="ghost" id="nmc" style="color:var(--ink)">Отмена</button></div>
+</div></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -169,7 +193,7 @@ auth.onAuthStateChanged(u => {
 function show(t){
   tab = t;
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-  ['list','logs','admin'].forEach(x => $(x).classList.toggle('hide', x !== t));
+  ['list','rating','logs','admin'].forEach(x => $(x).classList.toggle('hide', x !== t));
 }
 $('tabs').onclick = e => { if (e.target.dataset.t) show(e.target.dataset.t); };
 
@@ -183,12 +207,15 @@ function startData(){
     people = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
     renderPeople(); renderAdminPeople();
   }));
+  subs.push(db.collection('stats').orderBy('count','desc').onSnapshot(s => {
+    stats = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRating(); renderARate();
+  }, () => {}));
   if (canLogs()) subs.push(db.collection('logs').orderBy('ts','desc').limit(300).onSnapshot(s => {
     const items = s.docs.map(d => d.data({ serverTimestamps: 'estimate' }));
     $('lempty').classList.toggle('hide', items.length > 0);
     $('lempty').textContent = 'Записей пока нет';
     $('logbox').innerHTML = items.map(l =>
-      `<div class="log"><b>${esc(l.name)}</b> — ${l.present ? 'на месте' : 'ушёл'}<span>${fmt(l.ts && l.ts.toDate())} · отметил: ${esc(l.byName)}</span></div>`).join('');
+      `<div class="log"><b>${esc(l.name)}</b> — ${l.kind === 'note' ? (l.note ? '📝 ' + esc(l.note) : 'убрал примечание') : (l.present ? 'на месте' : 'ушёл')}<span>${fmt(l.ts && l.ts.toDate())} · отметил: ${esc(l.byName)}</span></div>`).join('');
   }, () => {}));
   if (isAdmin()) subs.push(db.collection('users').orderBy('name').onSnapshot(s => {
     users = s.docs.map(d => ({ id: d.id, ...d.data() })); renderUsers();
@@ -200,27 +227,33 @@ function renderPeople(){
   const inCnt = people.filter(p => p.present).length;
   $('cnt').textContent = people.length ? `На месте: ${inCnt} из ${people.length}` : '';
   $('people').innerHTML = people.length ? people.map(p => `
-    <button class="p ${p.present ? 'in' : 'out'}" data-id="${p.id}">
+    <div class="pw"><button class="p ${p.present ? 'in' : 'out'}" data-id="${p.id}">
       <span class="chk">${p.present ? '✓' : ''}</span>
       <span class="n">${esc(p.name)}</span>
       <span class="t"><span class="st">${p.present ? 'На месте' : 'Ушёл'}</span><br>${p.ts ? fmt(p.ts.toDate()) : ''}${p.by ? ' · ' + esc(p.by) : ''}</span>
-    </button>`).join('')
+    </button><div class="note" data-note="${p.id}">${p.note ? '📝 ' + esc(p.note) : '+ примечание'}</div></div>`).join('')
     : '<div class="box">Список пуст. Админ может добавить фамилии на вкладке «Админ».</div>';
 }
 $('people').onclick = async e => {
+  const nt = e.target.closest('.note');
+  if (nt && me) {
+    if (me.viewOnly === true && me.role !== 'admin') { alert('У вас доступ только для просмотра'); return; }
+    openNote(nt.dataset.note); return;
+  }
   const b = e.target.closest('.p'); if (!b || !me) return;
   if (me.viewOnly === true && me.role !== 'admin') { alert('У вас доступ только для просмотра'); return; }
   const p = people.find(x => x.id === b.dataset.id); if (!p) return;
   const present = !p.present, batch = db.batch();
-  batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name });
+  batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name, note: present ? '' : (p.note || '') });
   batch.set(db.collection('logs').doc(), { personId: p.id, name: p.name, present, ts: TS(), byUid: me.uid, byName: me.name });
+  batch.set(db.collection('stats').doc(me.uid), { name: me.name, count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
   try { await batch.commit(); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
 };
 
 // ---------- админка ----------
 function renderAdminPeople(){
   if (!isAdmin()) return;
-  $('plist').innerHTML = people.map(p => `<div class="row"><span class="g">${esc(p.name)}</span><button class="ghost sm" data-ren="${p.id}">Изменить</button><button class="ghost sm" data-del="${p.id}">Удалить</button></div>`).join('');
+  $('plist').innerHTML = people.map(p => `<div class="row"><span class="g">${esc(p.name)}</span><button class="ghost sm" data-ren="${p.id}">Изменить</button><button class="ghost sm" data-rs="${p.id}">Сброс</button><button class="ghost sm" data-del="${p.id}">Удалить</button></div>`).join('');
 }
 $('addp').onclick = async () => {
   const n = $('newp').value.trim(); if (!n) return;
@@ -229,7 +262,8 @@ $('addp').onclick = async () => {
 };
 $('newp').onkeydown = e => { if (e.key === 'Enter') $('addp').click(); };
 $('plist').onclick = async e => {
-  const id = e.target.dataset.del || e.target.dataset.ren; if (!id) return;
+  const id = e.target.dataset.del || e.target.dataset.ren || e.target.dataset.rs; if (!id) return;
+  if (e.target.dataset.rs) { await db.collection('people').doc(id).update({ ts: null, by: '', note: '' }); return; }
   const p = people.find(x => x.id === id);
   if (e.target.dataset.del) { if (confirm('Удалить «' + p.name + '»?')) await db.collection('people').doc(id).delete(); }
   else { const n = prompt('Новая фамилия', p.name); if (n && n.trim()) await db.collection('people').doc(id).update({ name: n.trim() }); }
@@ -258,6 +292,48 @@ $('clr').onclick = async () => {
     const b = db.batch(); s.docs.slice(i, i + 400).forEach(x => b.delete(x.ref)); await b.commit();
   }
   $('clrmsg').textContent = 'Удалено записей: ' + s.size;
+};
+
+let stats = [], noteId = null;
+const CHIPS = ['Ушёл на час', 'Уехал по делам', 'Обед', 'На совещании', 'Командировка'];
+function renderRating(){
+  $('ratebox').innerHTML = stats.length ? stats.map((s, i) => `<div class="row"><b style="width:28px">${i + 1}</b><span class="g">${esc(s.name)}${me && s.id === me.uid ? ' (вы)' : ''}</span><b>${s.count}</b></div>`).join('') : 'Пока никто не отмечал';
+}
+function renderARate(){
+  if (!isAdmin()) return;
+  $('arate').innerHTML = stats.map(s => `<div class="row"><span class="g">${esc(s.name)}: <b>${s.count}</b></span><button class="ghost sm" data-re="${s.id}">Изменить</button><button class="ghost sm" data-rd="${s.id}">Сброс</button></div>`).join('') || '<div class="cnt">Пусто</div>';
+}
+$('arate').onclick = async e => {
+  const id = e.target.dataset.re || e.target.dataset.rd; if (!id) return;
+  const s = stats.find(x => x.id === id); if (!s) return;
+  if (e.target.dataset.re) {
+    const n = prompt('Новое значение для «' + s.name + '»', s.count);
+    const v = parseInt(n, 10);
+    if (n !== null && !isNaN(v)) await db.collection('stats').doc(id).update({ count: Math.max(0, v) });
+  } else if (confirm('Удалить рейтинг «' + s.name + '»?')) await db.collection('stats').doc(id).delete();
+};
+$('ratezero').onclick = async () => {
+  if (!stats.length || !confirm('Обнулить весь рейтинг?')) return;
+  const b = db.batch(); stats.forEach(s => b.delete(db.collection('stats').doc(s.id))); await b.commit();
+};
+$('resetall').onclick = async () => {
+  if (!people.length || !confirm('Убрать дату, «кто отметил» и примечания у всех?')) return;
+  const b = db.batch(); people.forEach(p => b.update(db.collection('people').doc(p.id), { ts: null, by: '', note: '' })); await b.commit();
+};
+function openNote(id){
+  const p = people.find(x => x.id === id); if (!p) return;
+  noteId = id; $('nmt').textContent = p.name; $('nmi').value = p.note || '';
+  $('chips').innerHTML = CHIPS.map(c => `<button class="ghost sm" data-c="${c}">${c}</button>`).join('');
+  $('nm').classList.remove('hide'); $('nmi').focus();
+}
+$('chips').onclick = e => { if (e.target.dataset.c) $('nmi').value = e.target.dataset.c; };
+$('nmc').onclick = () => $('nm').classList.add('hide');
+$('nms').onclick = async () => {
+  const p = people.find(x => x.id === noteId); if (!p || !me) return;
+  const text = $('nmi').value.trim().slice(0, 80), b = db.batch();
+  b.update(db.collection('people').doc(p.id), { note: text });
+  b.set(db.collection('logs').doc(), { personId: p.id, name: p.name, kind: 'note', note: text, present: !!p.present, ts: TS(), byUid: me.uid, byName: me.name });
+  try { await b.commit(); $('nm').classList.add('hide'); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
 };
 
 mode(false);
