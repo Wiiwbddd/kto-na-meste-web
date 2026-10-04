@@ -29,8 +29,11 @@ input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;ma
 .p .n{flex:1;font-size:17px}
 .p .t{font-size:13px;color:var(--mute);text-align:right}
 .st{font-weight:600}.in .st{color:var(--ok)}.out .st{color:var(--no)}
-.row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
-.row:last-child{border:0}.row .g{flex:1}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}.row .g{flex:1 1 150px;min-width:0;overflow-wrap:anywhere}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btns button,.row button{white-space:nowrap}
+html,body{overflow-x:hidden}
 .log{padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
 .log span{color:var(--mute);font-size:13px;display:block}
 .err{color:var(--no);margin:6px 0;min-height:20px}
@@ -231,10 +234,10 @@ $('plist').onclick = async e => {
 function renderUsers(){
   $('ulist').innerHTML = users.map(u => `
     <div class="row"><span class="g">${esc(u.name)}<br><small style="color:var(--mute)">${esc(u.email)}</small></span>
-    ${u.id === me.uid ? '<small>это вы</small>' : `
-      <button class="ghost sm" data-view="${u.id}">${u.viewOnly ? 'Только смотр.' : 'Отмечает'}</button>
+    ${u.id === me.uid ? '<small>это вы</small>' : `<div class="btns">
+      <button class="ghost sm" data-view="${u.id}">${u.viewOnly ? 'Права: просмотр' : 'Права: отмечает'}</button>
       <button class="ghost sm" data-logs="${u.id}">${u.canLogs ? 'Логи: да' : 'Логи: нет'}</button>
-      <button class="ghost sm" data-role="${u.id}">${u.role === 'admin' ? 'Админ' : 'Юзер'}</button>`}
+      <button class="ghost sm" data-role="${u.id}">${u.role === 'admin' ? 'Админ' : 'Юзер'}</button></div>`}
     </div>`).join('');
 }
 $('ulist').onclick = async e => {
