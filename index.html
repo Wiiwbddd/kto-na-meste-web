@@ -130,7 +130,7 @@ $('go').onclick = async () => {
     if (isReg) {
       if (!name) { $('err').textContent = 'Укажите имя'; return; }
       const c = await auth.createUserWithEmailAndPassword(email, pass);
-      await db.collection('users').doc(c.user.uid).set({ email, name, role: 'user', canLogs: false, created: TS() });
+      await db.collection('users').doc(c.user.uid).set({ email, name, role: 'user', canLogs: false, viewOnly: false, created: TS() });
     } else {
       await auth.signInWithEmailAndPassword(email, pass);
     }
@@ -203,6 +203,7 @@ function renderPeople(){
 }
 $('people').onclick = async e => {
   const b = e.target.closest('.p'); if (!b || !me) return;
+  if (me.viewOnly === true && me.role !== 'admin') { alert('У вас доступ только для просмотра'); return; }
   const p = people.find(x => x.id === b.dataset.id); if (!p) return;
   const present = !p.present, batch = db.batch();
   batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name });
@@ -231,13 +232,15 @@ function renderUsers(){
   $('ulist').innerHTML = users.map(u => `
     <div class="row"><span class="g">${esc(u.name)}<br><small style="color:var(--mute)">${esc(u.email)}</small></span>
     ${u.id === me.uid ? '<small>это вы</small>' : `
+      <button class="ghost sm" data-view="${u.id}">${u.viewOnly ? 'Только смотр.' : 'Отмечает'}</button>
       <button class="ghost sm" data-logs="${u.id}">${u.canLogs ? 'Логи: да' : 'Логи: нет'}</button>
       <button class="ghost sm" data-role="${u.id}">${u.role === 'admin' ? 'Админ' : 'Юзер'}</button>`}
     </div>`).join('');
 }
 $('ulist').onclick = async e => {
-  const u = users.find(x => x.id === (e.target.dataset.logs || e.target.dataset.role)); if (!u) return;
-  if (e.target.dataset.logs) await db.collection('users').doc(u.id).update({ canLogs: !u.canLogs });
+  const u = users.find(x => x.id === (e.target.dataset.logs || e.target.dataset.role || e.target.dataset.view)); if (!u) return;
+  if (e.target.dataset.view) await db.collection('users').doc(u.id).update({ viewOnly: !u.viewOnly });
+  else if (e.target.dataset.logs) await db.collection('users').doc(u.id).update({ canLogs: !u.canLogs });
   else await db.collection('users').doc(u.id).update({ role: u.role === 'admin' ? 'user' : 'admin' });
 };
 $('clr').onclick = async () => {
