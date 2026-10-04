@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f2a37">
+<title>Кто на месте</title>
+<style>
+:root{--bg:#eef0f2;--card:#fff;--ink:#1b2430;--mute:#6b7683;--ok:#1f8a4c;--okbg:#e3f4ea;--no:#b3432f;--nobg:#fbe9e5;--line:#d9dde2;--acc:#1f2a37}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{background:var(--acc);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0;flex:1}
+header small{opacity:.75}
+main{max-width:640px;margin:0 auto;padding:12px}
+button,input,select{font:inherit}
+button{border:0;border-radius:10px;padding:10px 14px;background:var(--acc);color:#fff;cursor:pointer}
+button.ghost{background:transparent;color:inherit;border:1px solid var(--line)}
+button.sm{padding:6px 10px;font-size:14px}
+input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:0 0 10px;background:#fff}
+.box{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px}
+.tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
+.tabs button{background:#fff;color:var(--ink);white-space:nowrap}
+.tabs button.on{background:var(--acc);color:#fff}
+.p{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--ink);padding:14px;margin-bottom:8px;border-left:6px solid var(--no)}
+.p.in{border-left-color:var(--ok)}
+.chk{width:30px;height:30px;border-radius:8px;border:2px solid var(--no);display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
+.p.in .chk{background:var(--ok);border-color:var(--ok)}
+.p .n{flex:1;font-size:17px}
+.p .t{font-size:13px;color:var(--mute);text-align:right}
+.st{font-weight:600}.in .st{color:var(--ok)}.out .st{color:var(--no)}
+.row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}.row .g{flex:1}
+.log{padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+.log span{color:var(--mute);font-size:13px;display:block}
+.err{color:var(--no);margin:6px 0;min-height:20px}
+.hide{display:none!important}
+h2{font-size:16px;margin:0 0 10px}
+.cnt{font-size:14px;color:var(--mute);margin:0 0 8px}
+</style>
+</head>
+<body>
+<header><h1>Кто на месте</h1><small id="who"></small><button class="ghost sm hide" id="out">Выйти</button></header>
+<main>
+
+<div id="auth" class="box hide">
+  <h2 id="atitle">Вход</h2>
+  <input id="name" placeholder="Ваше имя (для логов)" class="hide">
+  <input id="email" type="email" placeholder="Email" autocomplete="username">
+  <input id="pass" type="password" placeholder="Пароль (мин. 6 символов)" autocomplete="current-password">
+  <div class="err" id="err"></div>
+  <button id="go" style="width:100%">Войти</button>
+  <p style="text-align:center"><a href="#" id="sw">Нет аккаунта? Зарегистрироваться</a></p>
+</div>
+
+<div id="app" class="hide">
+  <div class="tabs" id="tabs">
+    <button data-t="list" class="on">Список</button>
+    <button data-t="logs" class="hide" id="tlogs">Логи</button>
+    <button data-t="admin" class="hide" id="tadmin">Админ</button>
+  </div>
+
+  <section id="list"><p class="cnt" id="cnt"></p><div id="people"></div></section>
+
+  <section id="logs" class="hide">
+    <div class="box">
+      <div class="log" id="lempty">Загрузка…</div>
+      <div id="logbox"></div>
+    </div>
+  </section>
+
+  <section id="admin" class="hide">
+    <div class="box">
+      <h2>Сотрудники</h2>
+      <div style="display:flex;gap:8px"><input id="newp" placeholder="Фамилия" style="margin:0"><button id="addp">Добавить</button></div>
+      <div id="plist"></div>
+    </div>
+    <div class="box">
+      <h2>Пользователи</h2>
+      <div id="ulist"></div>
+    </div>
+    <div class="box">
+      <h2>Очистка логов</h2>
+      <div style="display:flex;gap:8px"><input id="days" type="number" min="0" value="30" style="margin:0"><button id="clr">Удалить старше N дней</button></div>
+      <div class="err" id="clrmsg" style="color:var(--mute)"></div>
+    </div>
+  </section>
+</div>
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// ====== 1. ВСТАВЬТЕ СВОИ ДАННЫЕ FIREBASE (Project settings → Your apps → Web) ======
+const firebaseConfig = {
+  apiKey: "AIzaSyDW4wGLd_8jXYIYGm9kNa-OTYAdUy3CpyY",
+  authDomain: "kto-na-meste-21c9b.firebaseapp.com",
+  projectId: "kto-na-meste-21c9b",
+  appId: "1:602404978292:web:c0621de2f3d35983745b21"
+};
+// =================================================================================
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(), db = firebase.firestore();
+const $ = id => document.getElementById(id);
+const TS = firebase.firestore.FieldValue.serverTimestamp;
+let me = null, isReg = false, unsubs = [], tab = 'list';
+
+const fmt = d => d ? d.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '…';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const isAdmin = () => me && me.role === 'admin';
+const canLogs = () => me && (me.role === 'admin' || me.canLogs === true);
+
+// ---------- вход / регистрация ----------
+function mode(reg){
+  isReg = reg;
+  $('atitle').textContent = reg ? 'Регистрация' : 'Вход';
+  $('name').classList.toggle('hide', !reg);
+  $('go').textContent = reg ? 'Создать аккаунт' : 'Войти';
+  $('sw').textContent = reg ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться';
+  $('err').textContent = '';
+}
+$('sw').onclick = e => { e.preventDefault(); mode(!isReg); };
+$('go').onclick = async () => {
+  $('err').textContent = '';
+  const email = $('email').value.trim(), pass = $('pass').value, name = $('name').value.trim();
+  try {
+    if (isReg) {
+      if (!name) { $('err').textContent = 'Укажите имя'; return; }
+      const c = await auth.createUserWithEmailAndPassword(email, pass);
+      await db.collection('users').doc(c.user.uid).set({ email, name, role: 'user', canLogs: false, created: TS() });
+    } else {
+      await auth.signInWithEmailAndPassword(email, pass);
+    }
+  } catch (e) {
+    const m = { 'auth/invalid-credential':'Неверный email или пароль','auth/wrong-password':'Неверный пароль','auth/user-not-found':'Пользователь не найден','auth/email-already-in-use':'Этот email уже занят','auth/weak-password':'Пароль слишком короткий','auth/invalid-email':'Неверный email' };
+    $('err').textContent = m[e.code] || e.message;
+  }
+};
+$('out').onclick = () => auth.signOut();
+
+auth.onAuthStateChanged(u => {
+  unsubs.forEach(f => f()); unsubs = []; me = null;
+  if (!u) {
+    $('auth').classList.remove('hide'); $('app').classList.add('hide'); $('out').classList.add('hide'); $('who').textContent = '';
+    return;
+  }
+  $('auth').classList.add('hide'); $('app').classList.remove('hide'); $('out').classList.remove('hide');
+  // профиль (роль) в реальном времени
+  unsubs.push(db.collection('users').doc(u.uid).onSnapshot(s => {
+    me = s.exists ? { uid: u.uid, ...s.data() } : { uid: u.uid, name: u.email, role: 'user', canLogs: false };
+    $('who').textContent = me.name + (isAdmin() ? ' (админ)' : '');
+    $('tlogs').classList.toggle('hide', !canLogs());
+    $('tadmin').classList.toggle('hide', !isAdmin());
+    if ((tab === 'logs' && !canLogs()) || (tab === 'admin' && !isAdmin())) show('list');
+    startData();
+  }));
+});
+
+// ---------- вкладки ----------
+function show(t){
+  tab = t;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  ['list','logs','admin'].forEach(x => $(x).classList.toggle('hide', x !== t));
+}
+$('tabs').onclick = e => { if (e.target.dataset.t) show(e.target.dataset.t); };
+
+// ---------- данные ----------
+let dataUnsubs = [], people = [], users = [];
+function startData(){
+  dataUnsubs.forEach(f => f()); dataUnsubs = [];
+  unsubs = unsubs.filter(f => !dataUnsubs.includes(f));
+  const subs = [];
+  subs.push(db.collection('people').orderBy('name').onSnapshot(s => {
+    people = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
+    renderPeople(); renderAdminPeople();
+  }));
+  if (canLogs()) subs.push(db.collection('logs').orderBy('ts','desc').limit(300).onSnapshot(s => {
+    const items = s.docs.map(d => d.data({ serverTimestamps: 'estimate' }));
+    $('lempty').classList.toggle('hide', items.length > 0);
+    $('lempty').textContent = 'Записей пока нет';
+    $('logbox').innerHTML = items.map(l =>
+      `<div class="log"><b>${esc(l.name)}</b> — ${l.present ? 'на месте' : 'ушёл'}<span>${fmt(l.ts && l.ts.toDate())} · отметил: ${esc(l.byName)}</span></div>`).join('');
+  }, () => {}));
+  if (isAdmin()) subs.push(db.collection('users').orderBy('name').onSnapshot(s => {
+    users = s.docs.map(d => ({ id: d.id, ...d.data() })); renderUsers();
+  }));
+  dataUnsubs = subs; unsubs.push(() => dataUnsubs.forEach(f => f()));
+}
+
+function renderPeople(){
+  const inCnt = people.filter(p => p.present).length;
+  $('cnt').textContent = people.length ? `На месте: ${inCnt} из ${people.length}` : '';
+  $('people').innerHTML = people.length ? people.map(p => `
+    <button class="p ${p.present ? 'in' : 'out'}" data-id="${p.id}">
+      <span class="chk">${p.present ? '✓' : ''}</span>
+      <span class="n">${esc(p.name)}</span>
+      <span class="t"><span class="st">${p.present ? 'На месте' : 'Ушёл'}</span><br>${p.ts ? fmt(p.ts.toDate()) : ''}${p.by ? ' · ' + esc(p.by) : ''}</span>
+    </button>`).join('')
+    : '<div class="box">Список пуст. Админ может добавить фамилии на вкладке «Админ».</div>';
+}
+$('people').onclick = async e => {
+  const b = e.target.closest('.p'); if (!b || !me) return;
+  const p = people.find(x => x.id === b.dataset.id); if (!p) return;
+  const present = !p.present, batch = db.batch();
+  batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name });
+  batch.set(db.collection('logs').doc(), { personId: p.id, name: p.name, present, ts: TS(), byUid: me.uid, byName: me.name });
+  try { await batch.commit(); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
+};
+
+// ---------- админка ----------
+function renderAdminPeople(){
+  if (!isAdmin()) return;
+  $('plist').innerHTML = people.map(p => `<div class="row"><span class="g">${esc(p.name)}</span><button class="ghost sm" data-ren="${p.id}">Изменить</button><button class="ghost sm" data-del="${p.id}">Удалить</button></div>`).join('');
+}
+$('addp').onclick = async () => {
+  const n = $('newp').value.trim(); if (!n) return;
+  await db.collection('people').add({ name: n, present: false, ts: null, by: '' });
+  $('newp').value = '';
+};
+$('newp').onkeydown = e => { if (e.key === 'Enter') $('addp').click(); };
+$('plist').onclick = async e => {
+  const id = e.target.dataset.del || e.target.dataset.ren; if (!id) return;
+  const p = people.find(x => x.id === id);
+  if (e.target.dataset.del) { if (confirm('Удалить «' + p.name + '»?')) await db.collection('people').doc(id).delete(); }
+  else { const n = prompt('Новая фамилия', p.name); if (n && n.trim()) await db.collection('people').doc(id).update({ name: n.trim() }); }
+};
+function renderUsers(){
+  $('ulist').innerHTML = users.map(u => `
+    <div class="row"><span class="g">${esc(u.name)}<br><small style="color:var(--mute)">${esc(u.email)}</small></span>
+    ${u.id === me.uid ? '<small>это вы</small>' : `
+      <button class="ghost sm" data-logs="${u.id}">${u.canLogs ? 'Логи: да' : 'Логи: нет'}</button>
+      <button class="ghost sm" data-role="${u.id}">${u.role === 'admin' ? 'Админ' : 'Юзер'}</button>`}
+    </div>`).join('');
+}
+$('ulist').onclick = async e => {
+  const u = users.find(x => x.id === (e.target.dataset.logs || e.target.dataset.role)); if (!u) return;
+  if (e.target.dataset.logs) await db.collection('users').doc(u.id).update({ canLogs: !u.canLogs });
+  else await db.collection('users').doc(u.id).update({ role: u.role === 'admin' ? 'user' : 'admin' });
+};
+$('clr').onclick = async () => {
+  const d = parseInt($('days').value, 10); if (isNaN(d) || d < 0) return;
+  if (!confirm('Удалить логи старше ' + d + ' дн.?')) return;
+  const cut = new Date(Date.now() - d * 864e5);
+  const s = await db.collection('logs').where('ts', '<', cut).get();
+  for (let i = 0; i < s.docs.length; i += 400) {
+    const b = db.batch(); s.docs.slice(i, i + 400).forEach(x => b.delete(x.ref)); await b.commit();
+  }
+  $('clrmsg').textContent = 'Удалено записей: ' + s.size;
+};
+
+mode(false);
+</script>
+</body>
+</html>
