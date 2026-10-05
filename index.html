@@ -43,6 +43,10 @@ html,body{overflow-x:hidden}
 .md{background:#fff;border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:640px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .chips button{color:var(--ink)}
+.note{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.bell{font-size:20px;padding:2px 6px;flex:none}
+.btnl{display:block;text-align:center;text-decoration:none;background:var(--acc);color:#fff;padding:12px;border-radius:10px;margin-bottom:8px}
+.toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));max-width:616px;margin:0 auto;background:#1f2a37;color:#fff;padding:12px 14px;border-radius:12px;z-index:30;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 .log{padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
 .log span{color:var(--mute);font-size:13px;display:block}
 .err{color:var(--no);margin:6px 0;min-height:20px}
@@ -73,7 +77,7 @@ h2{font-size:16px;margin:0 0 10px}
     <button data-t="admin" class="hide" id="tadmin">Админ</button>
   </div>
 
-  <section id="list"><p class="cnt" id="cnt"></p><div id="people"></div></section>
+  <section id="list"><p class="cnt" id="cnt"></p><button class="ghost sm" id="suball" style="margin-bottom:10px;color:var(--ink)">🔔 Уведомления обо всех</button><div id="people"></div></section>
 
   <section id="rating" class="hide"><div class="box"><h2>Кто больше всех отмечает</h2><div id="ratebox"></div></div></section>
 
@@ -113,6 +117,13 @@ h2{font-size:16px;margin:0 0 10px}
 
 </main>
 
+<div id="bm" class="ov hide"><div class="md">
+  <h2 id="bmt"></h2>
+  <p class="cnt" id="bhint"></p>
+  <a id="bsub" class="btnl" href="#">Подписаться в ntfy</a>
+  <button id="bcopy" class="ghost" style="width:100%;margin-bottom:8px;color:var(--ink)">Скопировать название канала</button>
+  <button id="bclose" style="width:100%">Закрыть</button>
+</div></div>
 <div id="nm" class="ov hide"><div class="md">
   <h2 id="nmt">Примечание</h2>
   <div class="chips" id="chips"></div>
@@ -207,6 +218,13 @@ function startData(){
     people = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
     renderPeople(); renderAdminPeople();
   }));
+  subs.push(db.collection('config').doc('push').onSnapshot(d => {
+    cfg = d.exists ? d.data() : null;
+    if (!d.exists && isAdmin()) {
+      const a = new Uint8Array(12); crypto.getRandomValues(a);
+      db.collection('config').doc('push').set({ prefix: Array.from(a, x => x.toString(16).padStart(2, '0')).join('') }).catch(() => {});
+    }
+  }, () => {}));
   subs.push(db.collection('stats').orderBy('count','desc').onSnapshot(s => {
     stats = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRating(); renderARate();
   }, () => {}));
@@ -231,10 +249,12 @@ function renderPeople(){
       <span class="chk">${p.present ? '✓' : ''}</span>
       <span class="n">${esc(p.name)}</span>
       <span class="t"><span class="st">${p.present ? 'На месте' : 'Ушёл'}</span><br>${p.ts ? fmt(p.ts.toDate()) : ''}${p.by ? ' · ' + esc(p.by) : ''}</span>
-    </button><div class="note" data-note="${p.id}">${p.note ? '📝 ' + esc(p.note) : '+ примечание'}</div></div>`).join('')
+    </button><div class="note" data-note="${p.id}"><span>${p.note ? '📝 ' + esc(p.note) : '+ примечание'}</span><span class="bell" data-bell="${p.id}" title="Уведомления">🔔</span></div></div>`).join('')
     : '<div class="box">Список пуст. Админ может добавить фамилии на вкладке «Админ».</div>';
 }
 $('people').onclick = async e => {
+  const bl = e.target.closest('.bell');
+  if (bl) { openBell(bl.dataset.bell); return; }
   const nt = e.target.closest('.note');
   if (nt && me) {
     if (me.viewOnly === true && me.role !== 'admin') { alert('У вас доступ только для просмотра'); return; }
@@ -247,7 +267,7 @@ $('people').onclick = async e => {
   batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name, note: present ? '' : (p.note || '') });
   batch.set(db.collection('logs').doc(), { personId: p.id, name: p.name, present, ts: TS(), byUid: me.uid, byName: me.name });
   batch.set(db.collection('stats').doc(me.uid), { name: me.name, count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-  try { await batch.commit(); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
+  try { await batch.commit(); push(p.id, p.name + (present ? ' — пришёл' : ' — ушёл'), 'Отметил: ' + me.name + (!present && p.note ? ' · ' + p.note : ''), present); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
 };
 
 // ---------- админка ----------
@@ -294,6 +314,59 @@ $('clr').onclick = async () => {
   $('clrmsg').textContent = 'Удалено записей: ' + s.size;
 };
 
+let watch = new Set(), prevState = null;
+try { watch = new Set(JSON.parse(localStorage.getItem('watch') || '[]')); } catch (e) {}
+function toast(t){ const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 5000); }
+function notify(text){
+  toast(text);
+  try { if (navigator.vibrate) navigator.vibrate(200); } catch (e) {}
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const o = { body: text, icon: 'icon-192.png', tag: 'ktm' + Date.now() };
+    const fb = () => { try { new Notification('Кто на месте', o); } catch (e) {} };
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r => r.showNotification('Кто на месте', o)).catch(fb); else fb();
+  }
+}
+function toggleBell(id){
+  if (watch.has(id)) watch.delete(id);
+  else {
+    watch.add(id);
+    if ('Notification' in window) {
+      if (Notification.permission === 'default') Notification.requestPermission();
+      else if (Notification.permission === 'denied') toast('Уведомления запрещены в настройках телефона. Внутри приложения оповещение будет показано.');
+    }
+  }
+  try { localStorage.setItem('watch', JSON.stringify([...watch])); } catch (e) {}
+  renderPeople();
+}
+function checkAlerts(list){
+  const cur = {}; list.forEach(p => cur[p.id] = !!p.present);
+  if (prevState) list.forEach(p => {
+    if (watch.has(p.id) && prevState[p.id] !== undefined && prevState[p.id] !== cur[p.id] && !(me && p.by === me.name))
+      notify(p.name + (cur[p.id] ? ' — пришёл' : ' — ушёл') + (p.by ? ' (отметил: ' + p.by + ')' : ''));
+  });
+  prevState = cur;
+}
+let cfg = null, bellTopic = '';
+const topic = id => 'ktm-' + cfg.prefix + '-' + id;
+function push(id, title, msg, present){
+  if (!cfg) return;
+  const click = location.origin + location.pathname;
+  [id, 'all'].forEach(t => {
+    try { fetch('https://ntfy.sh', { method: 'POST', body: JSON.stringify({ topic: topic(t), title, message: msg, click, priority: 4, tags: [present ? 'white_check_mark' : 'door'] }) }).catch(() => {}); } catch (e) {}
+  });
+}
+function openBell(id){
+  const pr = id === 'all' ? null : people.find(x => x.id === id);
+  $('bmt').textContent = id === 'all' ? 'Уведомления: все отметки' : 'Уведомления: ' + (pr ? pr.name : '');
+  const ok = !!cfg;
+  $('bsub').classList.toggle('hide', !ok); $('bcopy').classList.toggle('hide', !ok);
+  $('bhint').textContent = ok ? 'Нажмите «Подписаться в ntfy» и подтвердите подписку в приложении ntfy. Если ntfy не открылся: в ntfy нажмите «+» и вставьте скопированное название канала.' : 'Уведомления ещё не включены: админ должен один раз открыть приложение.';
+  if (ok) { bellTopic = topic(id); $('bsub').href = 'ntfy://ntfy.sh/' + bellTopic; }
+  $('bm').classList.remove('hide');
+}
+$('suball').onclick = () => openBell('all');
+$('bclose').onclick = () => $('bm').classList.add('hide');
+$('bcopy').onclick = async () => { try { await navigator.clipboard.writeText(bellTopic); toast('Название канала скопировано'); } catch (e) { prompt('Скопируйте название канала', bellTopic); } };
 let stats = [], noteId = null;
 const CHIPS = ['Ушёл на час', 'Уехал по делам', 'Обед', 'На совещании', 'Командировка'];
 function renderRating(){
@@ -333,7 +406,7 @@ $('nms').onclick = async () => {
   const text = $('nmi').value.trim().slice(0, 80), b = db.batch();
   b.update(db.collection('people').doc(p.id), { note: text });
   b.set(db.collection('logs').doc(), { personId: p.id, name: p.name, kind: 'note', note: text, present: !!p.present, ts: TS(), byUid: me.uid, byName: me.name });
-  try { await b.commit(); $('nm').classList.add('hide'); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
+  try { await b.commit(); $('nm').classList.add('hide'); push(p.id, p.name + ': примечание', (text || 'примечание убрано') + ' · ' + me.name, p.present); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
 };
 
 mode(false);
