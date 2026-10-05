@@ -77,7 +77,7 @@ h2{font-size:16px;margin:0 0 10px}
     <button data-t="admin" class="hide" id="tadmin">Админ</button>
   </div>
 
-  <section id="list"><p class="cnt" id="cnt"></p><button class="ghost sm" id="suball" style="margin-bottom:10px;color:var(--ink)">🔔 Уведомления обо всех</button><div id="people"></div></section>
+  <section id="list"><p class="cnt" id="cnt"></p><button class="ghost sm" id="suball" style="margin-bottom:10px;color:var(--ink)">🔔 Уведомления обо всех</button><div id="pst" class="cnt"></div><div id="people"></div></section>
 
   <section id="rating" class="hide"><div class="box"><h2>Кто больше всех отмечает</h2><div id="ratebox"></div></div></section>
 
@@ -120,8 +120,11 @@ h2{font-size:16px;margin:0 0 10px}
 <div id="bm" class="ov hide"><div class="md">
   <h2 id="bmt"></h2>
   <p class="cnt" id="bhint"></p>
+  <p class="cnt" id="bstate"></p>
   <a id="bsub" class="btnl" href="#">Подписаться в ntfy</a>
   <button id="bcopy" class="ghost" style="width:100%;margin-bottom:8px;color:var(--ink)">Скопировать название канала</button>
+  <button id="btest" class="ghost" style="width:100%;margin-bottom:8px;color:var(--ink)">Отправить тест</button>
+  <button id="bunsub" class="ghost" style="width:100%;margin-bottom:8px;color:var(--ink)">Я уже подписан (отметить)</button>
   <button id="bclose" style="width:100%">Закрыть</button>
 </div></div>
 <div id="nm" class="ov hide"><div class="md">
@@ -219,7 +222,7 @@ function startData(){
     renderPeople(); renderAdminPeople();
   }));
   subs.push(db.collection('config').doc('push').onSnapshot(d => {
-    cfg = d.exists ? d.data() : null;
+    cfg = d.exists ? d.data() : null; renderStatus();
     if (!d.exists && isAdmin()) {
       const a = new Uint8Array(12); crypto.getRandomValues(a);
       db.collection('config').doc('push').set({ prefix: Array.from(a, x => x.toString(16).padStart(2, '0')).join('') }).catch(() => {});
@@ -249,7 +252,7 @@ function renderPeople(){
       <span class="chk">${p.present ? '✓' : ''}</span>
       <span class="n">${esc(p.name)}</span>
       <span class="t"><span class="st">${p.present ? 'На месте' : 'Ушёл'}</span><br>${p.ts ? fmt(p.ts.toDate()) : ''}${p.by ? ' · ' + esc(p.by) : ''}</span>
-    </button><div class="note" data-note="${p.id}"><span>${p.note ? '📝 ' + esc(p.note) : '+ примечание'}</span><span class="bell" data-bell="${p.id}" title="Уведомления">🔔</span></div></div>`).join('')
+    </button><div class="note" data-note="${p.id}"><span>${p.note ? '📝 ' + esc(p.note) : '+ примечание'}</span><span class="bell" data-bell="${p.id}" title="Уведомления">${isSub(p.id) ? '🔔' : '🔕'}</span></div></div>`).join('')
     : '<div class="box">Список пуст. Админ может добавить фамилии на вкладке «Админ».</div>';
 }
 $('people').onclick = async e => {
@@ -348,24 +351,61 @@ function checkAlerts(list){
 }
 let cfg = null, bellTopic = '';
 const topic = id => 'ktm-' + cfg.prefix + '-' + id;
+let lastSt = null, bellId = null, mySubs = new Set();
+try { mySubs = new Set(JSON.parse(localStorage.getItem('mysubs') || '[]')); } catch (e) {}
+const saveSubs = () => { try { localStorage.setItem('mysubs', JSON.stringify([...mySubs])); } catch (e) {} };
+const isSub = id => mySubs.has(id) || mySubs.has('all');
+function sentToday(){ try { const d = JSON.parse(localStorage.getItem('sent') || '{}'); return d.day === new Date().toISOString().slice(0, 10) ? d.n : 0; } catch (e) { return 0; } }
+function bumpSent(n){ try { localStorage.setItem('sent', JSON.stringify({ day: new Date().toISOString().slice(0, 10), n: sentToday() + n })); } catch (e) {} }
+function renderStatus(){
+  const el = $('pst'); if (!el) return;
+  if (!cfg) { el.textContent = ''; return; }
+  const t = lastSt ? lastSt.t.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '';
+  el.textContent = (lastSt ? (lastSt.ok ? '✓ Уведомление ' : '⚠ Уведомление ') + lastSt.txt + ' в ' + t + ' · ' : '') + 'отправлено с этого телефона сегодня: ' + sentToday();
+}
+function setStatus(ok, txt){ lastSt = { ok, txt, t: new Date() }; renderStatus(); }
+function updateBellUi(){
+  $('suball').textContent = mySubs.has('all') ? '🔔 Уведомления обо всех ✓' : '🔔 Уведомления обо всех';
+  if (bellId) {
+    const on = mySubs.has(bellId);
+    $('bstate').textContent = on ? '✓ Подписка отмечена на этом телефоне. Чтобы убедиться, что уведомления доходят, нажмите «Отправить тест».' : 'Подписка не отмечена. Нажмите «Подписаться в ntfy».';
+    $('bunsub').textContent = on ? 'Снять отметку о подписке' : 'Я уже подписан (отметить)';
+  }
+}
+async function send(t, title, msg, present){
+  const r = await fetch('https://ntfy.sh', { method: 'POST', body: JSON.stringify({ topic: topic(t), title, message: msg, click: location.origin + location.pathname, priority: 4, tags: [present ? 'white_check_mark' : 'door'] }) });
+  if (r.status === 200) bumpSent(1);
+  return r;
+}
 function push(id, title, msg, present){
   if (!cfg) return;
-  const click = location.origin + location.pathname;
-  [id, 'all'].forEach(t => {
-    try { fetch('https://ntfy.sh', { method: 'POST', body: JSON.stringify({ topic: topic(t), title, message: msg, click, priority: 4, tags: [present ? 'white_check_mark' : 'door'] }) }).catch(() => {}); } catch (e) {}
+  Promise.all([id, 'all'].map(t => send(t, title, msg, present).then(r => r.status, () => 0))).then(codes => {
+    if (codes.every(c => c === 200)) setStatus(true, 'отправлено');
+    else if (codes.includes(429)) setStatus(false, 'не отправлено: лимит ntfy');
+    else setStatus(false, 'не отправлено: нет связи с ntfy');
   });
 }
 function openBell(id){
   const pr = id === 'all' ? null : people.find(x => x.id === id);
   $('bmt').textContent = id === 'all' ? 'Уведомления: все отметки' : 'Уведомления: ' + (pr ? pr.name : '');
   const ok = !!cfg;
-  $('bsub').classList.toggle('hide', !ok); $('bcopy').classList.toggle('hide', !ok);
+  $('bsub').classList.toggle('hide', !ok); $('bcopy').classList.toggle('hide', !ok); $('btest').classList.toggle('hide', !ok); $('bunsub').classList.toggle('hide', !ok); bellId = id;
   $('bhint').textContent = ok ? 'Нажмите «Подписаться в ntfy» и подтвердите подписку в приложении ntfy. Если ntfy не открылся: в ntfy нажмите «+» и вставьте скопированное название канала.' : 'Уведомления ещё не включены: админ должен один раз открыть приложение.';
   if (ok) { bellTopic = topic(id); $('bsub').href = 'ntfy://ntfy.sh/' + bellTopic; }
-  $('bm').classList.remove('hide');
+  updateBellUi(); $('bm').classList.remove('hide');
 }
 $('suball').onclick = () => openBell('all');
 $('bclose').onclick = () => $('bm').classList.add('hide');
+$('bsub').addEventListener('click', () => { if (bellId) { mySubs.add(bellId); saveSubs(); updateBellUi(); renderPeople(); } });
+$('bunsub').onclick = () => { if (!bellId) return; if (mySubs.has(bellId)) mySubs.delete(bellId); else mySubs.add(bellId); saveSubs(); updateBellUi(); renderPeople(); };
+$('btest').onclick = async () => {
+  if (!cfg || !bellId) return;
+  try {
+    const r = await send(bellId, 'Тест уведомлений', 'Если вы видите это, подписка работает', true);
+    toast(r.status === 200 ? 'Тест отправлен. Проверьте, пришло ли уведомление от ntfy.' : r.status === 429 ? 'Лимит ntfy исчерпан, тест не отправлен' : 'Ошибка отправки: ' + r.status);
+    renderStatus();
+  } catch (e) { toast('Нет связи с ntfy'); }
+};
 $('bcopy').onclick = async () => { try { await navigator.clipboard.writeText(bellTopic); toast('Название канала скопировано'); } catch (e) { prompt('Скопируйте название канала', bellTopic); } };
 let stats = [], noteId = null;
 const CHIPS = ['Ушёл на час', 'Уехал по делам', 'Обед', 'На совещании', 'Командировка'];
@@ -410,6 +450,7 @@ $('nms').onclick = async () => {
 };
 
 mode(false);
+renderStatus(); updateBellUi();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
