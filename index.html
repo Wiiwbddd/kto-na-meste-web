@@ -183,7 +183,7 @@ $('go').onclick = async () => {
     $('err').textContent = m[e.code] || e.message;
   }
 };
-$('out').onclick = () => auth.signOut();
+$('out').onclick = async () => { try { if (me) await db.collection('presence').doc(me.uid).set({ vis: false, last: TS() }, { merge: true }); } catch (e) {} auth.signOut(); };
 
 auth.onAuthStateChanged(u => {
   unsubs.forEach(f => f()); unsubs = []; me = null;
@@ -208,6 +208,7 @@ function show(t){
   tab = t;
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   ['list','rating','logs','admin'].forEach(x => $(x).classList.toggle('hide', x !== t));
+  trackSeen();
 }
 $('tabs').onclick = e => { if (e.target.dataset.t) show(e.target.dataset.t); };
 
@@ -215,11 +216,12 @@ $('tabs').onclick = e => { if (e.target.dataset.t) show(e.target.dataset.t); };
 let dataUnsubs = [], people = [], users = [];
 function startData(){
   dataUnsubs.forEach(f => f()); dataUnsubs = [];
+  beat();
   unsubs = unsubs.filter(f => !dataUnsubs.includes(f));
   const subs = [];
   subs.push(db.collection('people').orderBy('name').onSnapshot(s => {
     people = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
-    renderPeople(); renderAdminPeople();
+    renderPeople(); renderAdminPeople(); trackSeen();
   }));
   subs.push(db.collection('config').doc('push').onSnapshot(d => {
     cfg = d.exists ? d.data() : null; renderStatus();
@@ -237,6 +239,9 @@ function startData(){
     $('lempty').textContent = 'Записей пока нет';
     $('logbox').innerHTML = items.map(l =>
       `<div class="log"><b>${esc(l.name)}</b> — ${l.kind === 'note' ? (l.note ? '📝 ' + esc(l.note) : 'убрал примечание') : (l.present ? 'на месте' : 'ушёл')}<span>${fmt(l.ts && l.ts.toDate())} · отметил: ${esc(l.byName)}</span></div>`).join('');
+  }, () => {}));
+  if (isAdmin()) subs.push(db.collection('presence').onSnapshot(s => {
+    pres = {}; s.docs.forEach(d => pres[d.id] = d.data({ serverTimestamps: 'estimate' })); renderUsers();
   }, () => {}));
   if (isAdmin()) subs.push(db.collection('users').orderBy('name').onSnapshot(s => {
     users = s.docs.map(d => ({ id: d.id, ...d.data() })); renderUsers();
@@ -267,7 +272,7 @@ $('people').onclick = async e => {
   if (me.viewOnly === true && me.role !== 'admin') { alert('У вас доступ только для просмотра'); return; }
   const p = people.find(x => x.id === b.dataset.id); if (!p) return;
   const present = !p.present, batch = db.batch();
-  batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name, note: present ? '' : (p.note || '') });
+  batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name, note: present ? '' : (p.note || ''), upd: TS() });
   batch.set(db.collection('logs').doc(), { personId: p.id, name: p.name, present, ts: TS(), byUid: me.uid, byName: me.name });
   batch.set(db.collection('stats').doc(me.uid), { name: me.name, count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
   try { await batch.commit(); push(p.id, p.name + (present ? ' — пришёл' : ' — ушёл'), 'Отметил: ' + me.name + (!present && p.note ? ' · ' + p.note : ''), present); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
@@ -293,7 +298,7 @@ $('plist').onclick = async e => {
 };
 function renderUsers(){
   $('ulist').innerHTML = users.map(u => `
-    <div class="row"><span class="g">${esc(u.name)}<br><small style="color:var(--mute)">${esc(u.email)}</small></span>
+    <div class="row"><span class="g">${esc(u.name)}<br><small style="color:var(--mute)">${esc(u.email)}</small><br>${presLine(u.id)}</span>
     ${u.id === me.uid ? '<small>это вы</small>' : `<div class="btns">
       <button class="ghost sm" data-view="${u.id}">${u.viewOnly ? 'Права: просмотр' : 'Права: отмечает'}</button>
       <button class="ghost sm" data-logs="${u.id}">${u.canLogs ? 'Логи: да' : 'Логи: нет'}</button>
@@ -407,6 +412,29 @@ $('btest').onclick = async () => {
   } catch (e) { toast('Нет связи с ntfy'); }
 };
 $('bcopy').onclick = async () => { try { await navigator.clipboard.writeText(bellTopic); toast('Название канала скопировано'); } catch (e) { prompt('Скопируйте название канала', bellTopic); } };
+let pres = {}, lastWritten = 0;
+const msOf = t => (t && t.toMillis) ? t.toMillis() : 0;
+function latestUpd(){ return people.reduce((m, p) => Math.max(m, msOf(p.upd) || msOf(p.ts)), 0); }
+function beat(){ if (me) db.collection('presence').doc(me.uid).set({ last: TS(), vis: !document.hidden }, { merge: true }).catch(() => {}); }
+function trackSeen(){
+  if (!me || document.hidden || tab !== 'list') return;
+  const l = latestUpd(); if (!l || l <= lastWritten) return;
+  lastWritten = l;
+  db.collection('presence').doc(me.uid).set({ seenUpd: l, seenAt: TS() }, { merge: true }).catch(() => {});
+}
+setInterval(() => { if (!document.hidden) beat(); }, 60000);
+setInterval(() => { if (isAdmin()) renderUsers(); }, 30000);
+document.addEventListener('visibilitychange', () => { beat(); trackSeen(); });
+window.addEventListener('pagehide', () => beat());
+function presLine(uid){
+  const pr = pres[uid];
+  if (!pr) return '<small style="color:var(--mute)">ещё не заходил(а)</small>';
+  const last = pr.last && pr.last.toDate ? pr.last.toDate() : null;
+  const on = pr.vis && last && Date.now() - last.getTime() < 120000;
+  const seen = latestUpd() <= (pr.seenUpd || 0);
+  const at = pr.seenAt && pr.seenAt.toDate ? ' ' + fmt(pr.seenAt.toDate()) : '';
+  return `<small style="color:${on ? 'var(--ok)' : 'var(--mute)'}">${on ? '● в сети' : '○ был(а): ' + (last ? fmt(last) : '…')}</small><br><small style="color:${seen ? 'var(--ok)' : 'var(--no)'}">${seen ? '✓ видел(а) последние изменения' + at : '⚠ не видел(а) новые изменения'}</small>`;
+}
 let stats = [], noteId = null;
 const CHIPS = ['Ушёл на час', 'Уехал по делам', 'Обед', 'На совещании', 'Командировка'];
 function renderRating(){
@@ -444,7 +472,7 @@ $('nmc').onclick = () => $('nm').classList.add('hide');
 $('nms').onclick = async () => {
   const p = people.find(x => x.id === noteId); if (!p || !me) return;
   const text = $('nmi').value.trim().slice(0, 80), b = db.batch();
-  b.update(db.collection('people').doc(p.id), { note: text });
+  b.update(db.collection('people').doc(p.id), { note: text, upd: TS() });
   b.set(db.collection('logs').doc(), { personId: p.id, name: p.name, kind: 'note', note: text, present: !!p.present, ts: TS(), byUid: me.uid, byName: me.name });
   try { await b.commit(); $('nm').classList.add('hide'); push(p.id, p.name + ': примечание', (text || 'примечание убрано') + ' · ' + me.name, p.present); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
 };
