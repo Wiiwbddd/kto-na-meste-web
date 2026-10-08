@@ -23,15 +23,16 @@ main{max-width:640px;margin:0 auto;padding:12px}
 button,input,select{font:inherit}
 button{border:0;border-radius:10px;padding:10px 14px;background:var(--acc);color:var(--accfg);cursor:pointer}
 button.ghost{background:transparent;color:inherit;border:1px solid var(--line)}
-button.sm{padding:6px 10px;font-size:14px}
+button.sm{padding:6px 10px;font-size:14px;min-height:36px}
 input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:0 0 10px;background:var(--card);color:var(--ink)}
 .box{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px}
 .tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
-.tabs button{background:var(--card);color:var(--ink);white-space:nowrap}
+.tabs{scrollbar-width:none}
+.tabs button{background:var(--card);color:var(--ink);white-space:nowrap;padding:10px 12px;font-size:15px}
 .tabs button.on{background:var(--acc);color:var(--accfg)}
 .p{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--ink);padding:14px;margin-bottom:8px;border-left:6px solid var(--no)}
 .p.in{border-left-color:var(--ok)}
-.chk{width:30px;height:30px;border-radius:8px;border:2px solid var(--no);display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
+.chk{width:48px;height:48px;border-radius:12px;border:2px solid var(--no);background:transparent;padding:0;display:grid;place-items:center;font-weight:700;font-size:24px;color:#fff;flex:none}
 :root[data-theme="green"] .chk{color:#0b130e}
 .p.in .chk{background:var(--ok);border-color:var(--ok)}
 .p .n{flex:1;font-size:17px}
@@ -42,6 +43,8 @@ input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;ma
 .btns{display:flex;flex-wrap:wrap;gap:6px}
 .btns button,.row button{white-space:nowrap}
 .pw{margin-bottom:8px}.pw .p{margin-bottom:0;border-radius:10px 10px 0 0}
+.seg{display:flex;gap:6px;margin:0 0 10px}.seg button{flex:1;background:var(--card);color:var(--ink);padding:8px 6px;font-size:14px}.seg button.on{background:var(--acc);color:var(--accfg)}
+.chw{display:inline-flex;gap:2px}.chips .x{color:var(--no);padding:6px 9px}
 .note{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);padding:6px 14px 10px 20px;border-radius:0 0 10px 10px;font-size:14px;color:var(--mute);cursor:pointer;border-top:1px dashed var(--line)}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .md{background:var(--card);color:var(--ink);border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
@@ -93,10 +96,12 @@ a{color:var(--acc)}
     <button data-t="rating">Рейтинг</button>
     <button data-t="logs" class="hide" id="tlogs">Логи</button>
     <button data-t="admin" class="hide" id="tadmin">Админ</button>
-    <button data-t="more">⚙ Ещё</button>
+    <button data-t="more" title="Ещё">⚙</button>
   </div>
 
-  <section id="list"><p class="cnt" id="cnt"></p><div id="events"></div><div id="people"></div></section>
+  <section id="list"><p class="cnt" id="cnt"></p><div id="events"></div>
+  <div class="seg" id="flt"><button data-f="all" class="on">Все</button><button data-f="in">На месте</button><button data-f="out">Ушли</button></div>
+  <div id="people"></div></section>
 
   <section id="more" class="hide">
     <div class="box"><h2>Тема оформления</h2><div id="themes"></div></div>
@@ -266,7 +271,7 @@ function startData(){
     renderPeople(); renderAdminPeople(); trackSeen();
   }));
   subs.push(db.collection('presets').orderBy('title').onSnapshot(s => {
-    presets = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAPresets();
+    presets = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAPresets(); if (!$('em').classList.contains('hide')) renderChips();
   }, () => {}));
   subs.push(db.collection('events').orderBy('ts','desc').onSnapshot(s => {
     events = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })); renderEvents();
@@ -299,13 +304,14 @@ function startData(){
 
 function renderPeople(){
   const inCnt = people.filter(p => p.present).length;
+  const list = flt === 'all' ? people : people.filter(p => flt === 'in' ? p.present : !p.present);
   $('cnt').textContent = people.length ? `На месте: ${inCnt} из ${people.length}` : '';
-  $('people').innerHTML = people.length ? people.map(p => `
-    <div class="pw"><button class="p ${p.present ? 'in' : 'out'}" data-id="${p.id}">
-      <span class="chk">${p.present ? '✓' : ''}</span>
+  $('people').innerHTML = list.length ? list.map(p => `
+    <div class="pw"><div class="p ${p.present ? 'in' : 'out'}">
+      <button class="chk" data-id="${p.id}" aria-label="Отметить: ${esc(p.name)}">${p.present ? '✓' : ''}</button>
       <span class="n">${esc(p.name)}</span>
       <span class="t"><span class="st">${p.present ? 'На месте' : 'Ушёл'}</span><br>${p.ts ? fmt(p.ts.toDate()) : ''}${p.by ? ' · ' + esc(p.by) : ''}</span>
-    </button><div class="note" data-note="${p.id}"><span>${p.note ? '📝 ' + esc(p.note) : '+ примечание'}</span><span class="bell" data-bell="${p.id}" title="Уведомления">${isSub(p.id) ? '🔔' : '🔕'}</span></div></div>`).join('')
+    </div><div class="note" data-note="${p.id}"><span>${p.note ? '📝 ' + esc(p.note) : '+ примечание'}</span><span class="bell" data-bell="${p.id}" title="Уведомления">${isSub(p.id) ? '🔔' : '🔕'}</span></div></div>`).join('')
     : '<div class="box">Список пуст. Админ может добавить фамилии на вкладке «Админ».</div>';
 }
 $('people').onclick = async e => {
@@ -316,9 +322,11 @@ $('people').onclick = async e => {
     if (me.viewOnly === true && me.role !== 'admin') { alert('У вас доступ только для просмотра'); return; }
     openNote(nt.dataset.note); return;
   }
-  const b = e.target.closest('.p'); if (!b || !me) return;
+  const b = e.target.closest('.chk'); if (!b || !me) return;
   if (me.viewOnly === true && me.role !== 'admin') { alert('У вас доступ только для просмотра'); return; }
   const p = people.find(x => x.id === b.dataset.id); if (!p) return;
+  if (busy.has(p.id)) return; busy.add(p.id); setTimeout(() => busy.delete(p.id), 800);
+  try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
   const present = !p.present, batch = db.batch();
   batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name, note: present ? '' : (p.note || ''), upd: TS() });
   batch.set(db.collection('logs').doc(), { personId: p.id, name: p.name, present, ts: TS(), byUid: me.uid, byName: me.name });
@@ -511,19 +519,29 @@ let presets = [];
 const ICO = { red: '🛑', orange: '⚠️', blue: 'ℹ️' };
 const canEdit = () => me && (me.role === 'admin' || me.viewOnly !== true);
 function renderEvents(){
-  $('events').innerHTML = events.map(e => `<div class="ev k-${e.kind || 'red'}"><div class="evh"><b>${ICO[e.kind] || '🛑'} ${esc(e.title)}</b>${canEdit() ? `<button class="ghost sm" data-ev="${e.id}">Изменить</button>` : ''}</div>${e.text ? '<p>' + esc(e.text) + '</p>' : ''}<small>${esc(e.by)}${e.ts ? ' · ' + fmt(e.ts.toDate()) : ''}</small></div>`).join('')
+  $('events').innerHTML = events.map(e => `<div class="ev k-${e.kind || 'red'}"><div class="evh"><b>${ICO[e.kind] || '🛑'} ${esc(e.title)}</b>${canEdit() ? `<span class="btns"><button class="ghost sm" data-ev="${e.id}">Изменить</button><button class="ghost sm" data-evx="${e.id}">Снять</button></span>` : ''}</div>${e.text ? '<p>' + esc(e.text) + '</p>' : ''}<small>${esc(e.by)}${e.ts ? ' · ' + fmt(e.ts.toDate()) : ''}</small></div>`).join('')
     + (canEdit() ? '<button class="ghost sm" id="evadd" style="margin-bottom:10px;color:var(--ink)">＋ Событие</button>' : '');
 }
 function markKind(){ document.querySelectorAll('#evkinds button').forEach(b => b.classList.toggle('on', b.dataset.k === evKind)); }
 function openEv(id){
   const ev = id ? events.find(x => x.id === id) : null; evId = ev ? ev.id : null;
   $('evt').value = ev ? ev.title : ''; $('evx').value = ev ? (ev.text || '') : ''; evKind = ev ? (ev.kind || 'red') : 'red';
-  $('evchips').innerHTML = presets.map(c => `<button class="ghost sm" data-p="${c.id}">${esc(c.title)}${c.text ? ' · ' + esc(c.text) : ''}</button>`).join('');
+  renderChips();
   $('evpreset').classList.toggle('hide', !isAdmin());
   $('evdel').classList.toggle('hide', !ev); markKind(); $('em').classList.remove('hide');
 }
-$('events').onclick = e => { if (e.target.id === 'evadd') openEv(null); else if (e.target.dataset.ev) openEv(e.target.dataset.ev); };
-$('evchips').onclick = e => { const c = presets.find(x => x.id === e.target.dataset.p); if (c) { $('evt').value = c.title; $('evx').value = c.text || ''; evKind = c.kind || 'red'; markKind(); } };
+$('events').onclick = e => {
+  if (e.target.id === 'evadd') openEv(null);
+  else if (e.target.dataset.ev) openEv(e.target.dataset.ev);
+  else if (e.target.dataset.evx && confirm('Снять событие?')) db.collection('events').doc(e.target.dataset.evx).delete().catch(err => alert('Не удалось: ' + err.message));
+};
+$('evchips').onclick = e => {
+  if (e.target.dataset.pdel) {
+    const c0 = presets.find(x => x.id === e.target.dataset.pdel);
+    if (c0 && confirm('Удалить «' + c0.title + '» из частых?')) db.collection('presets').doc(c0.id).delete().catch(err => alert('Не удалось: ' + err.message));
+    return;
+  }
+  const c = presets.find(x => x.id === e.target.dataset.p); if (c) { $('evt').value = c.title; $('evx').value = c.text || ''; evKind = c.kind || 'red'; markKind(); } };
 $('evkinds').onclick = e => { if (e.target.dataset.k) { evKind = e.target.dataset.k; markKind(); } };
 $('evc').onclick = () => $('em').classList.add('hide');
 $('evs').onclick = async () => {
@@ -554,6 +572,16 @@ $('aprs').onclick = async e => {
   if (e.target.dataset.pd) { if (confirm('Удалить «' + c.title + '»?')) await db.collection('presets').doc(id).delete(); }
   else { const t = prompt('Название', c.title); if (t === null) return; const x = prompt('Описание', c.text || ''); if (t.trim()) await db.collection('presets').doc(id).update({ title: t.trim(), text: (x || '').trim() }); }
 };
+const busy = new Set(); let flt = 'all';
+$('flt').onclick = e => { if (e.target.dataset.f) { flt = e.target.dataset.f; document.querySelectorAll('#flt button').forEach(b => b.classList.toggle('on', b.dataset.f === flt)); renderPeople(); } };
+function renderChips(){
+  $('evchips').innerHTML = presets.map(c => `<span class="chw"><button class="ghost sm" data-p="${c.id}">${esc(c.title)}${c.text ? ' · ' + esc(c.text) : ''}</button>${isAdmin() ? `<button class="ghost sm x" data-pdel="${c.id}">✕</button>` : ''}</span>`).join('');
+}
+['name', 'email', 'pass'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); }));
+$('nmi').addEventListener('keydown', e => { if (e.key === 'Enter') $('nms').click(); });
+$('evt').addEventListener('keydown', e => { if (e.key === 'Enter') $('evx').focus(); });
+$('evx').addEventListener('keydown', e => { if (e.key === 'Enter') $('evs').click(); });
+['nm', 'em', 'bm'].forEach(id => $(id).addEventListener('click', e => { if (e.target === $(id)) $(id).classList.add('hide'); }));
 let stats = [], noteId = null;
 const CHIPS = ['Ушёл на час', 'Уехал по делам', 'Обед', 'На совещании', 'Командировка'];
 function renderRating(){
