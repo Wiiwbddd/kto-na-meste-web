@@ -4,30 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1f2a37">
+<script>try{var t=localStorage.getItem('theme')||'auto';if(t==='auto')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Кто на месте</title>
 <style>
-:root{--bg:#eef0f2;--card:#fff;--ink:#1b2430;--mute:#6b7683;--ok:#1f8a4c;--okbg:#e3f4ea;--no:#b3432f;--nobg:#fbe9e5;--line:#d9dde2;--acc:#1f2a37}
+:root{--bg:#eef0f2;--card:#fff;--ink:#1b2430;--mute:#6b7683;--ok:#1f8a4c;--no:#b3432f;--line:#d9dde2;--acc:#1f2a37;--accfg:#fff;--head:#1f2a37;--warn:#d98a1c;--info:#3b82f6}
+:root[data-theme="dark"]{--bg:#0e1116;--card:#181c23;--ink:#e8ecf2;--mute:#8b95a3;--ok:#34c27a;--no:#ef6a55;--line:#272d37;--acc:#4c8dff;--accfg:#fff;--head:#12161c;--warn:#f0a63a;--info:#4c8dff;color-scheme:dark}
+:root[data-theme="green"]{--bg:#0b130e;--card:#121c15;--ink:#e6f0e8;--mute:#86a08c;--ok:#6fd58a;--no:#ef6a55;--line:#1f2e24;--acc:#b5de45;--accfg:#10200f;--head:#0f1a12;--warn:#f0c04a;--info:#6fd58a;color-scheme:dark}
 *{box-sizing:border-box}
+html,body{overflow-x:hidden}
 body{margin:0;font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-header{background:var(--acc);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+header{background:var(--head);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
 header h1{font-size:18px;margin:0;flex:1}
 header small{opacity:.75}
 main{max-width:640px;margin:0 auto;padding:12px}
 button,input,select{font:inherit}
-button{border:0;border-radius:10px;padding:10px 14px;background:var(--acc);color:#fff;cursor:pointer}
+button{border:0;border-radius:10px;padding:10px 14px;background:var(--acc);color:var(--accfg);cursor:pointer}
 button.ghost{background:transparent;color:inherit;border:1px solid var(--line)}
 button.sm{padding:6px 10px;font-size:14px}
-input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:0 0 10px;background:#fff}
+input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:0 0 10px;background:var(--card);color:var(--ink)}
 .box{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px}
 .tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
-.tabs button{background:#fff;color:var(--ink);white-space:nowrap}
-.tabs button.on{background:var(--acc);color:#fff}
+.tabs button{background:var(--card);color:var(--ink);white-space:nowrap}
+.tabs button.on{background:var(--acc);color:var(--accfg)}
 .p{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--ink);padding:14px;margin-bottom:8px;border-left:6px solid var(--no)}
 .p.in{border-left-color:var(--ok)}
 .chk{width:30px;height:30px;border-radius:8px;border:2px solid var(--no);display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
+:root[data-theme="green"] .chk{color:#0b130e}
 .p.in .chk{background:var(--ok);border-color:var(--ok)}
 .p .n{flex:1;font-size:17px}
 .p .t{font-size:13px;color:var(--mute);text-align:right}
@@ -36,27 +41,40 @@ input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;ma
 .row:last-child{border:0}.row .g{flex:1 1 150px;min-width:0;overflow-wrap:anywhere}
 .btns{display:flex;flex-wrap:wrap;gap:6px}
 .btns button,.row button{white-space:nowrap}
-html,body{overflow-x:hidden}
 .pw{margin-bottom:8px}.pw .p{margin-bottom:0;border-radius:10px 10px 0 0}
-.note{background:#fff;padding:6px 14px 10px 20px;border-radius:0 0 10px 10px;font-size:14px;color:var(--mute);cursor:pointer;border-top:1px dashed var(--line)}
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
-.md{background:#fff;border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:640px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.note{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);padding:6px 14px 10px 20px;border-radius:0 0 10px 10px;font-size:14px;color:var(--mute);cursor:pointer;border-top:1px dashed var(--line)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.md{background:var(--card);color:var(--ink);border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .chips button{color:var(--ink)}
-.note{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .bell{font-size:20px;padding:2px 6px;flex:none}
-.btnl{display:block;text-align:center;text-decoration:none;background:var(--acc);color:#fff;padding:12px;border-radius:10px;margin-bottom:8px}
-.toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));max-width:616px;margin:0 auto;background:#1f2a37;color:#fff;padding:12px 14px;border-radius:12px;z-index:30;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.btnl{display:block;text-align:center;text-decoration:none;background:var(--acc);color:var(--accfg);padding:12px;border-radius:10px;margin-bottom:8px}
+.toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));max-width:616px;margin:0 auto;background:#2b3340;color:#fff;padding:12px 14px;border-radius:12px;z-index:30;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 .log{padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
 .log span{color:var(--mute);font-size:13px;display:block}
 .err{color:var(--no);margin:6px 0;min-height:20px}
 .hide{display:none!important}
 h2{font-size:16px;margin:0 0 10px}
 .cnt{font-size:14px;color:var(--mute);margin:0 0 8px}
+#cnt{font-size:18px;font-weight:600;color:var(--ink);margin:2px 0 10px}
+a{color:var(--acc)}
+.k-red{--evc:var(--no)}.k-orange{--evc:var(--warn)}.k-blue{--evc:var(--info)}
+.ev{background:var(--card);border-left:6px solid var(--evc,var(--no));border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.ev .evh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ev .evh b{font-size:17px}.ev p{margin:6px 0 4px}.ev small{color:var(--mute)}
+.kinds{display:flex;gap:6px;margin-bottom:10px}.kinds button{flex:1;color:#fff}
+.kinds [data-k=red]{background:var(--no)}.kinds [data-k=orange]{background:var(--warn)}.kinds [data-k=blue]{background:var(--info)}
+.kinds button.on{outline:3px solid var(--ink);outline-offset:1px}
+.th{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--ink);border:2px solid var(--line);padding:12px;margin-bottom:8px;border-radius:14px}
+.th.sel{border-color:var(--acc)}
+.th .thi{width:40px;height:40px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:20px;flex:none}
+.th .thn{flex:1}.th .thn small{display:block;color:var(--mute);font-size:13px}
+.dots{display:flex;gap:4px}.dots i{width:16px;height:16px;border-radius:50%;border:1px solid var(--line)}
+.tick{width:24px;height:24px;border-radius:50%;background:var(--acc);color:var(--accfg);display:grid;place-items:center;font-size:14px;flex:none}
 </style>
 </head>
 <body>
-<header><h1>Кто на месте</h1><small id="who"></small><button class="ghost sm hide" id="out">Выйти</button></header>
+<header><h1>Кто на месте</h1><small id="who"></small><button class="ghost sm" id="thm" title="Сменить тему">🌙</button></header>
 <main>
 
 <div id="auth" class="box hide">
@@ -75,9 +93,18 @@ h2{font-size:16px;margin:0 0 10px}
     <button data-t="rating">Рейтинг</button>
     <button data-t="logs" class="hide" id="tlogs">Логи</button>
     <button data-t="admin" class="hide" id="tadmin">Админ</button>
+    <button data-t="more">⚙ Ещё</button>
   </div>
 
-  <section id="list"><p class="cnt" id="cnt"></p><button class="ghost sm" id="suball" style="margin-bottom:10px;color:var(--ink)">🔔 Уведомления обо всех</button><div id="pst" class="cnt"></div><div id="people"></div></section>
+  <section id="list"><p class="cnt" id="cnt"></p><div id="events"></div><div id="people"></div></section>
+
+  <section id="more" class="hide">
+    <div class="box"><h2>Тема оформления</h2><div id="themes"></div></div>
+    <div class="box"><h2>Уведомления</h2>
+      <button class="ghost" id="suball" style="width:100%;color:var(--ink)">🔔 Уведомления обо всех</button>
+      <div id="pst" class="cnt" style="margin-top:8px"></div></div>
+    <div class="box"><h2>Аккаунт</h2><button id="out" class="ghost" style="width:100%;color:var(--ink)">Выйти из аккаунта</button></div>
+  </section>
 
   <section id="rating" class="hide"><div class="box"><h2>Кто больше всех отмечает</h2><div id="ratebox"></div></div></section>
 
@@ -117,6 +144,15 @@ h2{font-size:16px;margin:0 0 10px}
 
 </main>
 
+<div id="em" class="ov hide"><div class="md">
+  <h2>Событие</h2>
+  <div class="chips" id="evchips"></div>
+  <input id="evt" placeholder="Название, например: Совещание" maxlength="60">
+  <input id="evx" placeholder="Что делать: не пропускать никого к следаку" maxlength="120">
+  <div class="kinds" id="evkinds"><button data-k="red">Красный</button><button data-k="orange">Оранжевый</button><button data-k="blue">Синий</button></div>
+  <div style="display:flex;gap:8px"><button id="evs" style="flex:1">Сохранить</button><button class="ghost" id="evc" style="color:var(--ink)">Отмена</button></div>
+  <button class="ghost" id="evdel" style="width:100%;margin-top:8px;color:var(--no)">Снять событие</button>
+</div></div>
 <div id="bm" class="ov hide"><div class="md">
   <h2 id="bmt"></h2>
   <p class="cnt" id="bhint"></p>
@@ -207,7 +243,7 @@ auth.onAuthStateChanged(u => {
 function show(t){
   tab = t;
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-  ['list','rating','logs','admin'].forEach(x => $(x).classList.toggle('hide', x !== t));
+  ['list','rating','logs','admin','more'].forEach(x => $(x).classList.toggle('hide', x !== t));
   trackSeen();
 }
 $('tabs').onclick = e => { if (e.target.dataset.t) show(e.target.dataset.t); };
@@ -223,6 +259,9 @@ function startData(){
     people = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
     renderPeople(); renderAdminPeople(); trackSeen();
   }));
+  subs.push(db.collection('events').orderBy('ts','desc').onSnapshot(s => {
+    events = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })); renderEvents();
+  }, () => {}));
   subs.push(db.collection('config').doc('push').onSnapshot(d => {
     cfg = d.exists ? d.data() : null; renderStatus();
     if (!d.exists && isAdmin()) {
@@ -435,6 +474,66 @@ function presLine(uid){
   const at = pr.seenAt && pr.seenAt.toDate ? ' ' + fmt(pr.seenAt.toDate()) : '';
   return `<small style="color:${on ? 'var(--ok)' : 'var(--mute)'}">${on ? '● в сети' : '○ был(а): ' + (last ? fmt(last) : '…')}</small><br><small style="color:${seen ? 'var(--ok)' : 'var(--no)'}">${seen ? '✓ видел(а) последние изменения' + at : '⚠ не видел(а) новые изменения'}</small>`;
 }
+const THEMES = [
+  { id: 'auto', name: 'Авто', desc: 'Следует за системной темой', ico: 'A', dots: ['#1b2430', '#2a323d', '#3b82f6'] },
+  { id: 'green', name: 'Зелёная', desc: 'Тёмный лес с зелёным акцентом', ico: '🌿', dots: ['#0b130e', '#121c15', '#b5de45'] },
+  { id: 'light', name: 'Светлая', desc: 'Светлый режим с мягкими цветами', ico: '☀️', dots: ['#eef0f2', '#ffffff', '#1f2a37'] },
+  { id: 'dark', name: 'Тёмная', desc: 'Чистый тёмный с голубым акцентом', ico: '🌙', dots: ['#0e1116', '#181c23', '#4c8dff'] }
+];
+function themePref(){ try { return localStorage.getItem('theme') || 'auto'; } catch (e) { return 'auto'; } }
+function resolvedTheme(){ const t = themePref(); return t === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t; }
+function renderThemes(){
+  const cur = themePref();
+  $('themes').innerHTML = THEMES.map(t => `<button class="th ${t.id === cur ? 'sel' : ''}" data-th="${t.id}"><span class="thi">${t.ico}</span><span class="thn"><b>${t.name}</b><small>${t.desc}</small></span><span class="dots">${t.dots.map(c => `<i style="background:${c}"></i>`).join('')}</span>${t.id === cur ? '<span class="tick">✓</span>' : ''}</button>`).join('');
+}
+function applyTheme(){
+  const r = resolvedTheme(); document.documentElement.setAttribute('data-theme', r);
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = ({ light: '#1f2a37', dark: '#12161c', green: '#0f1a12' })[r];
+  $('thm').textContent = r === 'light' ? '🌙' : '☀️';
+  renderThemes();
+}
+function setTheme(t){ try { localStorage.setItem('theme', t); } catch (e) {} applyTheme(); }
+$('themes').onclick = e => { const b = e.target.closest('[data-th]'); if (b) setTheme(b.dataset.th); };
+$('thm').onclick = () => setTheme(resolvedTheme() === 'light' ? 'dark' : 'light');
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (themePref() === 'auto') applyTheme(); });
+
+let events = [], evId = null, evKind = 'red';
+const EVP = [
+  { t: 'Совещание', x: 'Никого не пропускать к следаку', k: 'red' },
+  { t: 'Совещание', x: 'Не заходить', k: 'red' },
+  { t: 'Обед', x: 'Перерыв, вернутся позже', k: 'blue' }
+];
+const ICO = { red: '🛑', orange: '⚠️', blue: 'ℹ️' };
+const canEdit = () => me && (me.role === 'admin' || me.viewOnly !== true);
+function renderEvents(){
+  $('events').innerHTML = events.map(e => `<div class="ev k-${e.kind || 'red'}"><div class="evh"><b>${ICO[e.kind] || '🛑'} ${esc(e.title)}</b>${canEdit() ? `<button class="ghost sm" data-ev="${e.id}">Изменить</button>` : ''}</div>${e.text ? '<p>' + esc(e.text) + '</p>' : ''}<small>${esc(e.by)}${e.ts ? ' · ' + fmt(e.ts.toDate()) : ''}</small></div>`).join('')
+    + (canEdit() ? '<button class="ghost sm" id="evadd" style="margin-bottom:10px;color:var(--ink)">＋ Событие</button>' : '');
+}
+function markKind(){ document.querySelectorAll('#evkinds button').forEach(b => b.classList.toggle('on', b.dataset.k === evKind)); }
+function openEv(id){
+  const ev = id ? events.find(x => x.id === id) : null; evId = ev ? ev.id : null;
+  $('evt').value = ev ? ev.title : ''; $('evx').value = ev ? (ev.text || '') : ''; evKind = ev ? (ev.kind || 'red') : 'red';
+  $('evchips').innerHTML = EVP.map((c, i) => `<button class="ghost sm" data-p="${i}">${c.t} · ${c.x}</button>`).join('');
+  $('evdel').classList.toggle('hide', !ev); markKind(); $('em').classList.remove('hide');
+}
+$('events').onclick = e => { if (e.target.id === 'evadd') openEv(null); else if (e.target.dataset.ev) openEv(e.target.dataset.ev); };
+$('evchips').onclick = e => { const c = EVP[e.target.dataset.p]; if (c) { $('evt').value = c.t; $('evx').value = c.x; evKind = c.k; markKind(); } };
+$('evkinds').onclick = e => { if (e.target.dataset.k) { evKind = e.target.dataset.k; markKind(); } };
+$('evc').onclick = () => $('em').classList.add('hide');
+$('evs').onclick = async () => {
+  const title = $('evt').value.trim(), text = $('evx').value.trim();
+  if (!title || !me) { toast('Укажите название события'); return; }
+  const data = { title, text, kind: evKind, by: me.name, ts: TS() };
+  try {
+    if (evId) await db.collection('events').doc(evId).update(data); else await db.collection('events').add(data);
+    $('em').classList.add('hide');
+    if (cfg && !evId) send('all', title, text || 'Новое событие', false).catch(() => {});
+  } catch (err) { alert('Не удалось сохранить: ' + err.message); }
+};
+$('evdel').onclick = async () => {
+  if (!evId || !confirm('Снять событие?')) return;
+  try { await db.collection('events').doc(evId).delete(); $('em').classList.add('hide'); } catch (err) { alert('Не удалось: ' + err.message); }
+};
 let stats = [], noteId = null;
 const CHIPS = ['Ушёл на час', 'Уехал по делам', 'Обед', 'На совещании', 'Командировка'];
 function renderRating(){
@@ -478,7 +577,7 @@ $('nms').onclick = async () => {
 };
 
 mode(false);
-renderStatus(); updateBellUi();
+renderStatus(); updateBellUi(); applyTheme(); renderEvents();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
