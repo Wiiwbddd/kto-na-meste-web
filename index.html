@@ -130,6 +130,11 @@ a{color:var(--acc)}
       <button id="resetall" style="width:100%">Сбросить дату и «кто отметил» у всех</button>
     </div>
     <div class="box">
+      <h2>Частые события</h2>
+      <div id="aprs"></div>
+      <div class="cnt">Добавить: в окне события заполните поля и нажмите «★ Сохранить как частое».</div>
+    </div>
+    <div class="box">
       <h2>Рейтинг (правка)</h2>
       <div id="arate"></div>
       <button id="ratezero" class="ghost" style="width:100%;margin-top:8px;color:var(--ink)">Обнулить весь рейтинг</button>
@@ -151,6 +156,7 @@ a{color:var(--acc)}
   <input id="evx" placeholder="Что делать: не пропускать никого к следаку" maxlength="120">
   <div class="kinds" id="evkinds"><button data-k="red">Красный</button><button data-k="orange">Оранжевый</button><button data-k="blue">Синий</button></div>
   <div style="display:flex;gap:8px"><button id="evs" style="flex:1">Сохранить</button><button class="ghost" id="evc" style="color:var(--ink)">Отмена</button></div>
+  <button class="ghost" id="evpreset" style="width:100%;margin-top:8px;color:var(--ink)">★ Сохранить как частое</button>
   <button class="ghost" id="evdel" style="width:100%;margin-top:8px;color:var(--no)">Снять событие</button>
 </div></div>
 <div id="bm" class="ov hide"><div class="md">
@@ -259,6 +265,9 @@ function startData(){
     people = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
     renderPeople(); renderAdminPeople(); trackSeen();
   }));
+  subs.push(db.collection('presets').orderBy('title').onSnapshot(s => {
+    presets = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAPresets();
+  }, () => {}));
   subs.push(db.collection('events').orderBy('ts','desc').onSnapshot(s => {
     events = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })); renderEvents();
   }, () => {}));
@@ -498,11 +507,7 @@ $('thm').onclick = () => setTheme(resolvedTheme() === 'light' ? 'dark' : 'light'
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (themePref() === 'auto') applyTheme(); });
 
 let events = [], evId = null, evKind = 'red';
-const EVP = [
-  { t: 'Совещание', x: 'Никого не пропускать к следаку', k: 'red' },
-  { t: 'Совещание', x: 'Не заходить', k: 'red' },
-  { t: 'Обед', x: 'Перерыв, вернутся позже', k: 'blue' }
-];
+let presets = [];
 const ICO = { red: '🛑', orange: '⚠️', blue: 'ℹ️' };
 const canEdit = () => me && (me.role === 'admin' || me.viewOnly !== true);
 function renderEvents(){
@@ -513,11 +518,12 @@ function markKind(){ document.querySelectorAll('#evkinds button').forEach(b => b
 function openEv(id){
   const ev = id ? events.find(x => x.id === id) : null; evId = ev ? ev.id : null;
   $('evt').value = ev ? ev.title : ''; $('evx').value = ev ? (ev.text || '') : ''; evKind = ev ? (ev.kind || 'red') : 'red';
-  $('evchips').innerHTML = EVP.map((c, i) => `<button class="ghost sm" data-p="${i}">${c.t} · ${c.x}</button>`).join('');
+  $('evchips').innerHTML = presets.map(c => `<button class="ghost sm" data-p="${c.id}">${esc(c.title)}${c.text ? ' · ' + esc(c.text) : ''}</button>`).join('');
+  $('evpreset').classList.toggle('hide', !isAdmin());
   $('evdel').classList.toggle('hide', !ev); markKind(); $('em').classList.remove('hide');
 }
 $('events').onclick = e => { if (e.target.id === 'evadd') openEv(null); else if (e.target.dataset.ev) openEv(e.target.dataset.ev); };
-$('evchips').onclick = e => { const c = EVP[e.target.dataset.p]; if (c) { $('evt').value = c.t; $('evx').value = c.x; evKind = c.k; markKind(); } };
+$('evchips').onclick = e => { const c = presets.find(x => x.id === e.target.dataset.p); if (c) { $('evt').value = c.title; $('evx').value = c.text || ''; evKind = c.kind || 'red'; markKind(); } };
 $('evkinds').onclick = e => { if (e.target.dataset.k) { evKind = e.target.dataset.k; markKind(); } };
 $('evc').onclick = () => $('em').classList.add('hide');
 $('evs').onclick = async () => {
@@ -533,6 +539,20 @@ $('evs').onclick = async () => {
 $('evdel').onclick = async () => {
   if (!evId || !confirm('Снять событие?')) return;
   try { await db.collection('events').doc(evId).delete(); $('em').classList.add('hide'); } catch (err) { alert('Не удалось: ' + err.message); }
+};
+$('evpreset').onclick = async () => {
+  const title = $('evt').value.trim(), text = $('evx').value.trim();
+  if (!isAdmin() || !title) { toast('Укажите название'); return; }
+  try { await db.collection('presets').add({ title, text, kind: evKind }); toast('Добавлено в частые'); } catch (err) { alert('Не удалось: ' + err.message); }
+};
+function renderAPresets(){
+  if (!isAdmin()) return;
+  $('aprs').innerHTML = presets.map(c => `<div class="row"><span class="g">${esc(c.title)}${c.text ? ' · ' + esc(c.text) : ''}</span><button class="ghost sm" data-pe="${c.id}">Изменить</button><button class="ghost sm" data-pd="${c.id}">Удалить</button></div>`).join('') || '<div class="cnt">Пока нет</div>';
+}
+$('aprs').onclick = async e => {
+  const id = e.target.dataset.pe || e.target.dataset.pd, c = presets.find(x => x.id === id); if (!c) return;
+  if (e.target.dataset.pd) { if (confirm('Удалить «' + c.title + '»?')) await db.collection('presets').doc(id).delete(); }
+  else { const t = prompt('Название', c.title); if (t === null) return; const x = prompt('Описание', c.text || ''); if (t.trim()) await db.collection('presets').doc(id).update({ title: t.trim(), text: (x || '').trim() }); }
 };
 let stats = [], noteId = null;
 const CHIPS = ['Ушёл на час', 'Уехал по делам', 'Обед', 'На совещании', 'Командировка'];
