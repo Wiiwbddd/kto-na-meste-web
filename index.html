@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1f2a37">
-<script>try{var t=localStorage.getItem('theme')||'auto';if(t==='auto')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>try{var L=localStorage,d=document.documentElement,t=L.getItem('theme')||'auto';if(t==='auto')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';d.setAttribute('data-theme',t);d.setAttribute('data-amoled',L.getItem('amoled')==='1'?'1':'0');d.setAttribute('data-density',L.getItem('density')==='compact'?'compact':'classic');var f=L.getItem('fs');f=f===null?2:+f;d.style.setProperty('--fs',[0.85,0.92,1,1.1,1.22][f]||1)}catch(e){}</script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -15,65 +15,94 @@
 :root[data-theme="green"]{--bg:#0b130e;--card:#121c15;--ink:#e6f0e8;--mute:#86a08c;--ok:#6fd58a;--no:#ef6a55;--line:#1f2e24;--acc:#b5de45;--accfg:#10200f;--head:#0f1a12;--warn:#f0c04a;--info:#6fd58a;color-scheme:dark}
 *{box-sizing:border-box}
 html,body{overflow-x:hidden}
-body{margin:0;font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+body{margin:0;font:1rem/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 header{background:var(--head);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
-header h1{font-size:18px;margin:0;flex:1}
+header h1{font-size:1.125rem;margin:0;flex:1}
 header small{opacity:.75}
 main{max-width:640px;margin:0 auto;padding:12px}
 button,input,select{font:inherit}
 button{border:0;border-radius:10px;padding:10px 14px;background:var(--acc);color:var(--accfg);cursor:pointer}
 button.ghost{background:transparent;color:inherit;border:1px solid var(--line)}
-button.sm{padding:6px 10px;font-size:14px;min-height:36px}
+button.sm{padding:6px 10px;font-size:0.875rem;min-height:36px}
 input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:0 0 10px;background:var(--card);color:var(--ink)}
 .box{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px}
 .tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
 .tabs{scrollbar-width:none}
-.tabs button{background:var(--card);color:var(--ink);white-space:nowrap;padding:10px 12px;font-size:15px}
+.tabs button{background:var(--card);color:var(--ink);white-space:nowrap;padding:10px 12px;font-size:0.9375rem}
 .tabs button.on{background:var(--acc);color:var(--accfg)}
 .p{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--ink);padding:14px;margin-bottom:8px;border-left:6px solid var(--no)}
 .p.in{border-left-color:var(--ok)}
-.chk{width:48px;height:48px;border-radius:12px;border:2px solid var(--no);background:transparent;padding:0;display:grid;place-items:center;font-weight:700;font-size:24px;color:#fff;flex:none}
+.chk{width:48px;height:48px;border-radius:12px;border:2px solid var(--no);background:transparent;padding:0;display:grid;place-items:center;font-weight:700;font-size:1.5rem;color:#fff;flex:none}
 :root[data-theme="green"] .chk{color:#0b130e}
 .p.in .chk{background:var(--ok);border-color:var(--ok)}
-.p .n{flex:1;font-size:17px}
-.p .t{font-size:13px;color:var(--mute);text-align:right}
+.p .n{flex:1;font-size:1.062rem}
+.p .t{font-size:0.8125rem;color:var(--mute);text-align:right}
 .st{font-weight:600}.in .st{color:var(--ok)}.out .st{color:var(--no)}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 .row:last-child{border:0}.row .g{flex:1 1 150px;min-width:0;overflow-wrap:anywhere}
 .btns{display:flex;flex-wrap:wrap;gap:6px}
 .btns button,.row button{white-space:nowrap}
 .pw{margin-bottom:8px}.pw .p{margin-bottom:0;border-radius:10px 10px 0 0}
-.seg{display:flex;gap:6px;margin:0 0 10px}.seg button{flex:1;background:var(--card);color:var(--ink);padding:8px 6px;font-size:14px}.seg button.on{background:var(--acc);color:var(--accfg)}
+.seg{display:flex;gap:6px;margin:0 0 10px}.seg button{flex:1;background:var(--card);color:var(--ink);padding:8px 6px;font-size:0.875rem}.seg button.on{background:var(--acc);color:var(--accfg)}
 .chw{display:inline-flex;gap:2px}.chips .x{color:var(--no);padding:6px 9px}
-.note{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);padding:6px 14px 10px 20px;border-radius:0 0 10px 10px;font-size:14px;color:var(--mute);cursor:pointer;border-top:1px dashed var(--line)}
+.note{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);padding:6px 14px 10px 20px;border-radius:0 0 10px 10px;font-size:0.875rem;color:var(--mute);cursor:pointer;border-top:1px dashed var(--line)}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .md{background:var(--card);color:var(--ink);border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .chips button{color:var(--ink)}
-.bell{font-size:20px;padding:2px 6px;flex:none}
+.bell{font-size:1.25rem;padding:2px 6px;flex:none}
 .btnl{display:block;text-align:center;text-decoration:none;background:var(--acc);color:var(--accfg);padding:12px;border-radius:10px;margin-bottom:8px}
 .toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));max-width:616px;margin:0 auto;background:#2b3340;color:#fff;padding:12px 14px;border-radius:12px;z-index:30;box-shadow:0 4px 16px rgba(0,0,0,.3)}
-.log{padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
-.log span{color:var(--mute);font-size:13px;display:block}
+.log{padding:8px 0;border-bottom:1px solid var(--line);font-size:0.9375rem}
+.log span{color:var(--mute);font-size:0.8125rem;display:block}
 .err{color:var(--no);margin:6px 0;min-height:20px}
 .hide{display:none!important}
-h2{font-size:16px;margin:0 0 10px}
-.cnt{font-size:14px;color:var(--mute);margin:0 0 8px}
-#cnt{font-size:18px;font-weight:600;color:var(--ink);margin:2px 0 10px}
+h2{font-size:1rem;margin:0 0 10px}
+.cnt{font-size:0.875rem;color:var(--mute);margin:0 0 8px}
+#cnt{font-size:1.125rem;font-weight:600;color:var(--ink);margin:2px 0 10px}
 a{color:var(--acc)}
 .k-red{--evc:var(--no)}.k-orange{--evc:var(--warn)}.k-blue{--evc:var(--info)}
 .ev{background:var(--card);border-left:6px solid var(--evc,var(--no));border-radius:12px;padding:12px 14px;margin-bottom:10px}
 .ev .evh{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.ev .evh b{font-size:17px}.ev p{margin:6px 0 4px}.ev small{color:var(--mute)}
+.ev .evh b{font-size:1.062rem}.ev p{margin:6px 0 4px}.ev small{color:var(--mute)}
 .kinds{display:flex;gap:6px;margin-bottom:10px}.kinds button{flex:1;color:#fff}
 .kinds [data-k=red]{background:var(--no)}.kinds [data-k=orange]{background:var(--warn)}.kinds [data-k=blue]{background:var(--info)}
 .kinds button.on{outline:3px solid var(--ink);outline-offset:1px}
 .th{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--ink);border:2px solid var(--line);padding:12px;margin-bottom:8px;border-radius:14px}
 .th.sel{border-color:var(--acc)}
-.th .thi{width:40px;height:40px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:20px;flex:none}
-.th .thn{flex:1}.th .thn small{display:block;color:var(--mute);font-size:13px}
+.th .thi{width:40px;height:40px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:1.25rem;flex:none}
+.th .thn{flex:1}.th .thn small{display:block;color:var(--mute);font-size:0.8125rem}
 .dots{display:flex;gap:4px}.dots i{width:16px;height:16px;border-radius:50%;border:1px solid var(--line)}
-.tick{width:24px;height:24px;border-radius:50%;background:var(--acc);color:var(--accfg);display:grid;place-items:center;font-size:14px;flex:none}
+.tick{width:24px;height:24px;border-radius:50%;background:var(--acc);color:var(--accfg);display:grid;place-items:center;font-size:0.875rem;flex:none}
+html{font-size:calc(16px * var(--fs,1))}
+:root[data-amoled="1"][data-theme="dark"]{--bg:#000;--card:#0a0a0a;--head:#000;--line:#1c1c1c}
+:root[data-amoled="1"][data-theme="green"]{--bg:#000;--card:#070d09;--head:#000;--line:#14221a}
+:root[data-density="compact"] .p{padding:6px 10px}
+:root[data-density="compact"] .chk{width:40px;height:40px;font-size:1.25rem}
+:root[data-density="compact"] .p .n{font-size:.95rem}
+:root[data-density="compact"] .p .t{font-size:.72rem}
+:root[data-density="compact"] .note{padding:2px 12px 5px 14px;font-size:.82rem}
+:root[data-density="compact"] .pw{margin-bottom:6px}
+.opt{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:14px;padding:12px;margin-top:10px}
+.opt .oi{width:40px;height:40px;border-radius:10px;background:var(--card);display:grid;place-items:center;font-size:1.25rem;flex:none}
+.opt .ot{flex:1}.opt small{display:block;color:var(--mute)}
+.sw{position:relative;width:52px;height:30px;flex:none}.sw input{opacity:0;width:100%;height:100%;margin:0;position:absolute;inset:0;cursor:pointer;z-index:1}
+.sw i{position:absolute;inset:0;border-radius:15px;background:var(--line)}.sw i:after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.15s}
+.sw input:checked+i{background:var(--acc)}.sw input:checked+i:after{left:25px}
+input[type=range]{padding:0;margin:8px 0;accent-color:var(--acc)}
+.fsl{display:flex;justify-content:space-between;color:var(--mute);font-size:.85rem}
+.dens{display:flex;gap:10px}.dens button{flex:1;background:var(--bg);color:var(--mute);border:2px solid var(--line);padding:14px 8px;border-radius:14px}.dens button.sel{border-color:var(--acc);color:var(--acc)}
+.sws{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.sws button{width:36px;height:36px;border-radius:50%;padding:0;border:3px solid transparent}.sws button.sel{border-color:var(--ink)}
+.chh{display:flex;align-items:center;gap:8px;margin-bottom:8px}.chh b{flex:1}
+#cmsgs{display:flex;flex-direction:column;overflow-y:auto;height:calc(100vh - 330px);height:calc(100dvh - 330px);min-height:220px;padding:4px 0}
+.bub{max-width:84%;padding:8px 12px;border-radius:14px;margin:3px 0;background:var(--card);align-self:flex-start;overflow-wrap:anywhere;white-space:pre-wrap}
+.bub.me{align-self:flex-end;background:var(--acc);color:var(--accfg)}
+.bub .bh{display:flex;justify-content:space-between;gap:10px;font-size:.8rem;margin-bottom:2px}
+.bub small{opacity:.65;font-size:.72rem}
+.bub .mm{background:transparent;border:0;color:inherit;padding:0 6px;opacity:.7;font-size:1rem;min-height:0}
+.cin{display:flex;gap:8px;padding-top:8px}.cin input{margin:0;flex:1}.cin button{flex:none;min-width:52px}
+#camb>button{width:100%;margin-bottom:8px}
+.calc label{display:block}
 </style>
 </head>
 <body>
@@ -83,6 +112,7 @@ a{color:var(--acc)}
 <div id="auth" class="box hide">
   <h2 id="atitle">Вход</h2>
   <input id="name" placeholder="Ваше имя (для логов)" class="hide">
+  <input id="code" placeholder="Код приглашения (его выдаёт админ)" class="hide" autocomplete="off">
   <input id="email" type="email" placeholder="Email" autocomplete="username">
   <input id="pass" type="password" placeholder="Пароль (мин. 6 символов)" autocomplete="current-password">
   <div class="err" id="err"></div>
@@ -90,10 +120,17 @@ a{color:var(--acc)}
   <p style="text-align:center"><a href="#" id="sw">Нет аккаунта? Зарегистрироваться</a></p>
 </div>
 
+<div id="pending" class="box hide">
+  <h2>⏳ Ожидает одобрения</h2>
+  <p>Заявка отправлена. Когда администратор её одобрит, откроется доступ. Зайдите позже.</p>
+  <button id="out2" class="ghost" style="width:100%;color:var(--ink)">Выйти</button>
+</div>
+
 <div id="app" class="hide">
   <div class="tabs" id="tabs">
     <button data-t="list" class="on">Список</button>
     <button data-t="rating">Рейтинг</button>
+    <button data-t="chat" class="hide" id="tchat">💬 Чат β</button>
     <button data-t="logs" class="hide" id="tlogs">Логи</button>
     <button data-t="admin" class="hide" id="tadmin">Админ</button>
     <button data-t="more" title="Ещё">⚙</button>
@@ -103,12 +140,27 @@ a{color:var(--acc)}
   <div class="seg" id="flt"><button data-f="all" class="on">Все</button><button data-f="in">На месте</button><button data-f="out">Ушли</button></div>
   <div id="people"></div></section>
 
+  <section id="chat" class="hide">
+    <div id="clist"></div>
+    <div id="cview" class="hide">
+      <div class="chh"><b id="cname"></b><button class="ghost sm" id="cbell" title="Уведомления">🔔</button><button class="ghost sm hide" id="cmem" title="Участники">👥</button></div>
+      <div id="cstat" class="cnt"></div>
+      <div id="cmsgs"></div>
+      <div class="cin"><input id="cmi" placeholder="Сообщение" maxlength="500" autocomplete="off"><button id="csend">➤</button></div>
+    </div>
+  </section>
+
   <section id="more" class="hide">
-    <div class="box"><h2>Тема оформления</h2><div id="themes"></div></div>
+    <div class="box"><h2>Тема оформления</h2><div id="themes"></div>
+      <label class="opt"><span class="oi">◐</span><span class="ot"><b>AMOLED чёрный</b><small>Чистый чёрный фон, экономит заряд на OLED (для тёмных тем)</small></span><span class="sw"><input type="checkbox" id="amo"><i></i></span></label>
+    </div>
+    <div class="box"><h2>Размер текста</h2><div id="fsp" style="margin-bottom:6px">Съешь ещё этих мягких французских булок</div><input type="range" id="fsr" min="0" max="4" step="1"><div class="fsl"><span>Меньше</span><span id="fsn">Обычный</span><span>Больше</span></div></div>
+    <div class="box"><h2>Стиль списка</h2><div class="dens" id="dens"><button data-d="classic">Классический</button><button data-d="compact">Компактный</button></div></div>
+    <div class="box"><h2>Цвет имени</h2><div id="namepre" style="font-size:1.1rem;margin-bottom:8px"></div><div class="sws" id="sws"></div><div style="display:flex;gap:8px;align-items:center"><input type="color" id="colpick" style="width:56px;height:40px;padding:2px;margin:0"><button class="ghost sm" id="colreset" style="color:var(--ink)">Сбросить цвет</button></div></div>
     <div class="box"><h2>Уведомления</h2>
       <button class="ghost" id="suball" style="width:100%;color:var(--ink)">🔔 Уведомления обо всех</button>
       <div id="pst" class="cnt" style="margin-top:8px"></div></div>
-    <div class="box"><h2>Аккаунт</h2><button id="out" class="ghost" style="width:100%;color:var(--ink)">Выйти из аккаунта</button></div>
+    <div class="box"><h2>Аккаунт</h2><button id="out" class="ghost" style="width:100%;color:var(--ink)">Выйти из аккаунта</button><div class="cnt" style="margin:8px 0 0">Версия: <span id="ver"></span></div></div>
   </section>
 
   <section id="rating" class="hide"><div class="box"><h2>Кто больше всех отмечает</h2><div id="ratebox"></div></div></section>
@@ -127,6 +179,13 @@ a{color:var(--acc)}
       <div id="plist"></div>
     </div>
     <div class="box">
+      <h2>Приглашения</h2>
+      <div class="cnt">Введите почту сотрудника и создайте для неё код. Регистрация возможна только с этой почтой и этим кодом.</div>
+      <input id="invem" type="email" placeholder="Почта сотрудника" autocomplete="off">
+      <button id="invadd" style="width:100%">Создать код</button>
+      <div id="invlist" style="margin-top:8px"></div>
+    </div>
+    <div class="box">
       <h2>Пользователи</h2>
       <div id="ulist"></div>
     </div>
@@ -138,6 +197,27 @@ a{color:var(--acc)}
       <h2>Частые события</h2>
       <div id="aprs"></div>
       <div class="cnt">Добавить: в окне события заполните поля и нажмите «★ Сохранить как частое».</div>
+    </div>
+    <div class="box">
+      <h2>Лимиты Firebase (бесплатный тариф)</h2>
+      <div id="ubox"></div>
+      <div class="cnt">Цифры приходят с телефонов (при сворачивании приложения и раз в 30 минут), поэтому могут отставать. Точные данные: Firebase Console → Firestore → Usage.</div>
+      <h2 style="margin-top:14px">Калькулятор: хватит ли лимитов</h2>
+      <div class="calc">
+        <label class="cnt">Пользователей<input id="calU" type="number" min="1" value="20"></label>
+        <label class="cnt">Заходов в приложение на человека в день<input id="calO" type="number" min="0" value="10"></label>
+        <label class="cnt">Отметок «пришёл/ушёл» в день<input id="calM" type="number" min="0" value="150"></label>
+        <label class="cnt">Сообщений в чате в день<input id="calC" type="number" min="0" value="500"></label>
+        <label class="cnt">Человек в чате<input id="calCu" type="number" min="0" value="20"></label>
+      </div>
+      <div id="calcout"></div>
+    </div>
+    <div class="box">
+      <h2>Чат (бета)</h2>
+      <div class="cnt">Чат виден только админу, модератору и тем, у кого включена «Роль чат» (кнопка «Состав»). Сообщения живут 1 день.</div>
+      <div id="achats"></div>
+      <button id="cclean" class="ghost" style="width:100%;margin-top:8px;color:var(--ink)">Удалить сообщения старше суток</button>
+      <div class="cnt" id="cclmsg" style="margin-top:6px"></div>
     </div>
     <div class="box">
       <h2>Рейтинг (правка)</h2>
@@ -164,6 +244,9 @@ a{color:var(--acc)}
   <button class="ghost" id="evpreset" style="width:100%;margin-top:8px;color:var(--ink)">★ Сохранить как частое</button>
   <button class="ghost" id="evdel" style="width:100%;margin-top:8px;color:var(--no)">Снять событие</button>
 </div></div>
+<div id="cam" class="ov hide"><div class="md"><h2 id="camt"></h2><p class="cnt" id="camx"></p><div id="camb"></div><button class="ghost" id="camc" style="width:100%;color:var(--ink)">Закрыть</button></div></div>
+<div id="cmm" class="ov hide"><div class="md"><h2>Участники чата</h2><div id="cmmb"></div><button class="ghost" id="cmmc" style="width:100%;margin-top:8px;color:var(--ink)">Закрыть</button></div></div>
+<div id="sm" class="ov hide"><div class="md"><h2 id="smt"></h2><div id="smb"></div><button class="ghost" id="smc" style="width:100%;margin-top:8px;color:var(--ink)">Закрыть</button></div></div>
 <div id="bm" class="ov hide"><div class="md">
   <h2 id="bmt"></h2>
   <p class="cnt" id="bhint"></p>
@@ -195,6 +278,19 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore();
+try { db.enablePersistence({ synchronizeTabs: true }).catch(() => {}); } catch (e) {}
+const pacDay = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+const USG = { day: '', r: 0, w: 0, d: 0 }; let noCount = false, lastFlush = 0, lastFlushStr = '';
+function uLoad(){ const day = pacDay(); let o = null; try { o = JSON.parse(localStorage.getItem('usage') || 'null'); } catch (e) {} if (o && o.day === day) Object.assign(USG, o); else Object.assign(USG, { day, r: 0, w: 0, d: 0 }); }
+function uSave(){ try { localStorage.setItem('usage', JSON.stringify(USG)); } catch (e) {} }
+function rd(x){ try { if (noCount) return; let n = 0; if (x && typeof x.docChanges === 'function') { if (!(x.metadata && x.metadata.fromCache)) n = x.docChanges().length; } else if (x && x.exists && !(x.metadata && x.metadata.fromCache)) n = 1; if (n) { uLoad(); USG.r += n; uSave(); } } catch (e) {} }
+function wr(k){ try { if (noCount) return; uLoad(); USG[k]++; uSave(); } catch (e) {} }
+try {
+  const F = firebase.firestore;
+  ['set', 'update'].forEach(k => [F.DocumentReference, F.WriteBatch].forEach(C => { const o = C.prototype[k]; C.prototype[k] = function () { wr('w'); return o.apply(this, arguments); }; }));
+  [F.DocumentReference, F.WriteBatch].forEach(C => { const o = C.prototype.delete; C.prototype.delete = function () { wr('d'); return o.apply(this, arguments); }; });
+  const oa = F.CollectionReference.prototype.add; F.CollectionReference.prototype.add = function () { wr('w'); return oa.apply(this, arguments); };
+} catch (e) {}
 const $ = id => document.getElementById(id);
 const TS = firebase.firestore.FieldValue.serverTimestamp;
 let me = null, isReg = false, unsubs = [], tab = 'list';
@@ -208,7 +304,7 @@ const canLogs = () => me && (me.role === 'admin' || me.canLogs === true);
 function mode(reg){
   isReg = reg;
   $('atitle').textContent = reg ? 'Регистрация' : 'Вход';
-  $('name').classList.toggle('hide', !reg);
+  $('name').classList.toggle('hide', !reg); $('code').classList.toggle('hide', !reg);
   $('go').textContent = reg ? 'Создать аккаунт' : 'Войти';
   $('sw').textContent = reg ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться';
   $('err').textContent = '';
@@ -220,8 +316,16 @@ $('go').onclick = async () => {
   try {
     if (isReg) {
       if (!name) { $('err').textContent = 'Укажите имя'; return; }
+      const code = $('code').value.trim();
+      if (!code) { $('err').textContent = 'Введите код приглашения'; return; }
       const c = await auth.createUserWithEmailAndPassword(email, pass);
-      await db.collection('users').doc(c.user.uid).set({ email, name, role: 'user', canLogs: false, viewOnly: false, created: TS() });
+      try {
+        await db.collection('claims').doc(c.user.uid).set({ code });
+        await db.collection('users').doc(c.user.uid).set({ email, name, role: 'user', canLogs: false, viewOnly: false, created: TS() });
+      } catch (e2) {
+        try { await c.user.delete(); } catch (x) {}
+        $('err').textContent = 'Неверный код или эта почта не приглашена'; return;
+      }
     } else {
       await auth.signInWithEmailAndPassword(email, pass);
     }
@@ -230,22 +334,26 @@ $('go').onclick = async () => {
     $('err').textContent = m[e.code] || e.message;
   }
 };
-$('out').onclick = async () => { try { if (me) await db.collection('presence').doc(me.uid).set({ vis: false, last: TS() }, { merge: true }); } catch (e) {} auth.signOut(); };
+$('out').onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(u => {
   unsubs.forEach(f => f()); unsubs = []; me = null;
   if (!u) {
-    $('auth').classList.remove('hide'); $('app').classList.add('hide'); $('out').classList.add('hide'); $('who').textContent = '';
+    $('auth').classList.remove('hide'); $('app').classList.add('hide'); $('pending').classList.add('hide'); $('out').classList.add('hide'); $('who').textContent = '';
     return;
   }
   $('auth').classList.add('hide'); $('app').classList.remove('hide'); $('out').classList.remove('hide');
   // профиль (роль) в реальном времени
-  unsubs.push(db.collection('users').doc(u.uid).onSnapshot(s => {
+  unsubs.push(db.collection('users').doc(u.uid).onSnapshot(s => { rd(s);
     me = s.exists ? { uid: u.uid, ...s.data() } : { uid: u.uid, name: u.email, role: 'user', canLogs: false };
-    $('who').textContent = me.name + (isAdmin() ? ' (админ)' : '');
+    me.pending = !s.exists || s.data().approved === false;
+    $('app').classList.toggle('hide', me.pending); $('pending').classList.toggle('hide', !me.pending);
+    if (me.pending) { $('who').textContent = me.name; dataUnsubs.forEach(f => f()); dataUnsubs = []; return; }
+    setWho();
     $('tlogs').classList.toggle('hide', !canLogs());
+    $('tchat').classList.toggle('hide', !chatAccess());
     $('tadmin').classList.toggle('hide', !isAdmin());
-    if ((tab === 'logs' && !canLogs()) || (tab === 'admin' && !isAdmin())) show('list');
+    if ((tab === 'logs' && !canLogs()) || (tab === 'admin' && !isAdmin()) || (tab === 'chat' && !chatAccess())) show('list');
     startData();
   }));
 });
@@ -254,8 +362,10 @@ auth.onAuthStateChanged(u => {
 function show(t){
   tab = t;
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-  ['list','rating','logs','admin','more'].forEach(x => $(x).classList.toggle('hide', x !== t));
-  trackSeen();
+  ['list','rating','chat','logs','admin','more'].forEach(x => $(x).classList.toggle('hide', x !== t));
+  if (t !== 'chat' && curChat) closeChat();
+  if (t === 'chat' && !curChat && chats.c1) openChat('c1');
+  if (t === 'admin') { startUsage(); renderCalc(); renderUsage(); } else stopUsage();
 }
 $('tabs').onclick = e => { if (e.target.dataset.t) show(e.target.dataset.t); };
 
@@ -263,41 +373,45 @@ $('tabs').onclick = e => { if (e.target.dataset.t) show(e.target.dataset.t); };
 let dataUnsubs = [], people = [], users = [];
 function startData(){
   dataUnsubs.forEach(f => f()); dataUnsubs = [];
-  beat();
   unsubs = unsubs.filter(f => !dataUnsubs.includes(f));
   const subs = [];
-  subs.push(db.collection('people').orderBy('name').onSnapshot(s => {
+  subs.push(db.collection('people').orderBy('name').onSnapshot(s => { rd(s);
     people = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
-    renderPeople(); renderAdminPeople(); trackSeen();
+    renderPeople(); renderAdminPeople();
   }));
-  subs.push(db.collection('presets').orderBy('title').onSnapshot(s => {
+  if (isAdmin()) subs.push(db.collection('invites').onSnapshot(s => { rd(s); invites = s.docs.map(d => ({ id: d.id, ...d.data() })); renderInvites(); }, () => {}));
+  subs.push(db.collection('presets').orderBy('title').onSnapshot(s => { rd(s);
     presets = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAPresets(); if (!$('em').classList.contains('hide')) renderChips();
   }, () => {}));
-  subs.push(db.collection('events').orderBy('ts','desc').onSnapshot(s => {
+  if (!isAdmin()) chats = {};
+  if (isAdmin()) subs.push(db.collection('chats').onSnapshot(s => { rd(s); chats = {}; s.docs.forEach(d => chats[d.id] = { id: d.id, ...d.data() }); ensureChats(s); renderChatList(); renderAChats(); refreshComp(); autoClean(); }, () => {}));
+  else if (chatAccess()) (me.chats || []).forEach(id => subs.push(db.collection('chats').doc(id).onSnapshot(d => { rd(d); if (d.exists) chats[id] = { id, ...d.data() }; else delete chats[id]; renderChatList(); }, () => {})));
+  subs.push(db.collection('events').orderBy('ts','desc').onSnapshot(s => { rd(s);
     events = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })); renderEvents();
   }, () => {}));
-  subs.push(db.collection('config').doc('push').onSnapshot(d => {
+  subs.push(db.collection('config').doc('push').onSnapshot(d => { rd(d);
     cfg = d.exists ? d.data() : null; renderStatus();
     if (!d.exists && isAdmin()) {
       const a = new Uint8Array(12); crypto.getRandomValues(a);
       db.collection('config').doc('push').set({ prefix: Array.from(a, x => x.toString(16).padStart(2, '0')).join('') }).catch(() => {});
     }
   }, () => {}));
-  subs.push(db.collection('stats').orderBy('count','desc').onSnapshot(s => {
+  subs.push(db.collection('stats').orderBy('count','desc').onSnapshot(s => { rd(s);
     stats = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRating(); renderARate();
   }, () => {}));
-  if (canLogs()) subs.push(db.collection('logs').orderBy('ts','desc').limit(300).onSnapshot(s => {
+  if (canLogs()) subs.push(db.collection('logs').orderBy('ts','desc').limit(100).onSnapshot(s => { rd(s);
     const items = s.docs.map(d => d.data({ serverTimestamps: 'estimate' }));
     $('lempty').classList.toggle('hide', items.length > 0);
     $('lempty').textContent = 'Записей пока нет';
     $('logbox').innerHTML = items.map(l =>
-      `<div class="log"><b>${esc(l.name)}</b> — ${l.kind === 'note' ? (l.note ? '📝 ' + esc(l.note) : 'убрал примечание') : (l.present ? 'на месте' : 'ушёл')}<span>${fmt(l.ts && l.ts.toDate())} · отметил: ${esc(l.byName)}</span></div>`).join('');
+      `<div class="log"><b>${esc(l.name)}</b> — ${l.kind === 'note' ? (l.note ? '📝 ' + esc(l.note) : 'убрал примечание') : (l.present ? 'на месте' : 'ушёл')}<span>${fmt(l.ts && l.ts.toDate())} · отметил: ${nm(l.byName)}</span></div>`).join('');
   }, () => {}));
-  if (isAdmin()) subs.push(db.collection('presence').onSnapshot(s => {
-    pres = {}; s.docs.forEach(d => pres[d.id] = d.data({ serverTimestamps: 'estimate' })); renderUsers();
-  }, () => {}));
-  if (isAdmin()) subs.push(db.collection('users').orderBy('name').onSnapshot(s => {
-    users = s.docs.map(d => ({ id: d.id, ...d.data() })); renderUsers();
+  
+  subs.push(db.collection('users').orderBy('name').onSnapshot(s => { rd(s);
+    users = s.docs.map(d => ({ id: d.id, ...d.data() })); colors = {}; users.forEach(u => { if (u.color) colors[u.name] = u.color; });
+    if (isAdmin()) { renderUsers(); renderInvites(); refreshComp(); }
+    renderPeople(); renderEvents(); renderRating(); setWho(); renderColor();
+    const pn = users.filter(x => x.approved === false).length; $('tadmin').textContent = 'Админ' + (pn ? ' (' + pn + ')' : '');
   }));
   dataUnsubs = subs; unsubs.push(() => dataUnsubs.forEach(f => f()));
 }
@@ -310,7 +424,7 @@ function renderPeople(){
     <div class="pw"><div class="p ${p.present ? 'in' : 'out'}">
       <button class="chk" data-id="${p.id}" aria-label="Отметить: ${esc(p.name)}">${p.present ? '✓' : ''}</button>
       <span class="n">${esc(p.name)}</span>
-      <span class="t"><span class="st">${p.present ? 'На месте' : 'Ушёл'}</span><br>${p.ts ? fmt(p.ts.toDate()) : ''}${p.by ? ' · ' + esc(p.by) : ''}</span>
+      <span class="t"><span class="st">${p.present ? 'На месте' : 'Ушёл'}</span><br>${p.ts ? fmt(p.ts.toDate()) : ''}${p.by ? ' · ' + nm(p.by) : ''}</span>
     </div><div class="note" data-note="${p.id}"><span>${p.note ? '📝 ' + esc(p.note) : '+ примечание'}</span><span class="bell" data-bell="${p.id}" title="Уведомления">${isSub(p.id) ? '🔔' : '🔕'}</span></div></div>`).join('')
     : '<div class="box">Список пуст. Админ может добавить фамилии на вкладке «Админ».</div>';
 }
@@ -328,7 +442,7 @@ $('people').onclick = async e => {
   if (busy.has(p.id)) return; busy.add(p.id); setTimeout(() => busy.delete(p.id), 800);
   try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
   const present = !p.present, batch = db.batch();
-  batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name, note: present ? '' : (p.note || ''), upd: TS() });
+  batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name, note: present ? '' : (p.note || '') });
   batch.set(db.collection('logs').doc(), { personId: p.id, name: p.name, present, ts: TS(), byUid: me.uid, byName: me.name });
   batch.set(db.collection('stats').doc(me.uid), { name: me.name, count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
   try { await batch.commit(); push(p.id, p.name + (present ? ' — пришёл' : ' — ушёл'), 'Отметил: ' + me.name + (!present && p.note ? ' · ' + p.note : ''), present); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
@@ -354,16 +468,18 @@ $('plist').onclick = async e => {
 };
 function renderUsers(){
   $('ulist').innerHTML = users.map(u => `
-    <div class="row"><span class="g">${esc(u.name)}<br><small style="color:var(--mute)">${esc(u.email)}</small><br>${presLine(u.id)}</span>
-    ${u.id === me.uid ? '<small>это вы</small>' : `<div class="btns">
+    <div class="row"><span class="g">${esc(u.name)}<br><small style="color:var(--mute)">${esc(u.email)}</small></span>
+    ${u.id === me.uid ? '<small>это вы</small>' : u.approved === false ? `<div class="btns"><small style="color:var(--warn);align-self:center">⏳ ждёт</small><button class="sm" data-ap="${u.id}">Одобрить</button><button class="ghost sm" data-rj="${u.id}">Отклонить</button></div>` : `<div class="btns">
       <button class="ghost sm" data-view="${u.id}">${u.viewOnly ? 'Права: просмотр' : 'Права: отмечает'}</button>
       <button class="ghost sm" data-logs="${u.id}">${u.canLogs ? 'Логи: да' : 'Логи: нет'}</button>
-      <button class="ghost sm" data-role="${u.id}">${u.role === 'admin' ? 'Админ' : 'Юзер'}</button></div>`}
+      <button class="ghost sm" data-role="${u.id}">${u.role === 'admin' ? 'Админ' : 'Юзер'}</button><button class="ghost sm" data-rj="${u.id}" title="Убрать доступ">✕</button></div>`}
     </div>`).join('');
 }
 $('ulist').onclick = async e => {
-  const u = users.find(x => x.id === (e.target.dataset.logs || e.target.dataset.role || e.target.dataset.view)); if (!u) return;
-  if (e.target.dataset.view) await db.collection('users').doc(u.id).update({ viewOnly: !u.viewOnly });
+  const u = users.find(x => x.id === (e.target.dataset.logs || e.target.dataset.role || e.target.dataset.view || e.target.dataset.ap || e.target.dataset.rj)); if (!u) return;
+  if (e.target.dataset.ap) await db.collection('users').doc(u.id).update({ approved: true });
+  else if (e.target.dataset.rj) { if (confirm('Убрать доступ у «' + u.name + '»?')) { const bt = db.batch(); bt.delete(db.collection('users').doc(u.id)); bt.delete(db.collection('claims').doc(u.id)); if (u.email) bt.delete(db.collection('invites').doc(u.email.toLowerCase())); await bt.commit(); } }
+  else if (e.target.dataset.view) await db.collection('users').doc(u.id).update({ viewOnly: !u.viewOnly });
   else if (e.target.dataset.logs) await db.collection('users').doc(u.id).update({ canLogs: !u.canLogs });
   else await db.collection('users').doc(u.id).update({ role: u.role === 'admin' ? 'user' : 'admin' });
 };
@@ -448,7 +564,7 @@ function push(id, title, msg, present){
 }
 function openBell(id){
   const pr = id === 'all' ? null : people.find(x => x.id === id);
-  $('bmt').textContent = id === 'all' ? 'Уведомления: все отметки' : 'Уведомления: ' + (pr ? pr.name : '');
+  $('bmt').textContent = id === 'all' ? 'Уведомления: все отметки' : id.startsWith('chat-') ? 'Уведомления: чат «' + ((chats[id.slice(5)] || {}).name || '') + '»' : 'Уведомления: ' + (pr ? pr.name : '');
   const ok = !!cfg;
   $('bsub').classList.toggle('hide', !ok); $('bcopy').classList.toggle('hide', !ok); $('btest').classList.toggle('hide', !ok); $('bunsub').classList.toggle('hide', !ok); bellId = id;
   $('bhint').textContent = ok ? 'Нажмите «Подписаться в ntfy» и подтвердите подписку в приложении ntfy. Если ntfy не открылся: в ntfy нажмите «+» и вставьте скопированное название канала.' : 'Уведомления ещё не включены: админ должен один раз открыть приложение.';
@@ -468,29 +584,6 @@ $('btest').onclick = async () => {
   } catch (e) { toast('Нет связи с ntfy'); }
 };
 $('bcopy').onclick = async () => { try { await navigator.clipboard.writeText(bellTopic); toast('Название канала скопировано'); } catch (e) { prompt('Скопируйте название канала', bellTopic); } };
-let pres = {}, lastWritten = 0;
-const msOf = t => (t && t.toMillis) ? t.toMillis() : 0;
-function latestUpd(){ return people.reduce((m, p) => Math.max(m, msOf(p.upd) || msOf(p.ts)), 0); }
-function beat(){ if (me) db.collection('presence').doc(me.uid).set({ last: TS(), vis: !document.hidden }, { merge: true }).catch(() => {}); }
-function trackSeen(){
-  if (!me || document.hidden || tab !== 'list') return;
-  const l = latestUpd(); if (!l || l <= lastWritten) return;
-  lastWritten = l;
-  db.collection('presence').doc(me.uid).set({ seenUpd: l, seenAt: TS() }, { merge: true }).catch(() => {});
-}
-setInterval(() => { if (!document.hidden) beat(); }, 60000);
-setInterval(() => { if (isAdmin()) renderUsers(); }, 30000);
-document.addEventListener('visibilitychange', () => { beat(); trackSeen(); });
-window.addEventListener('pagehide', () => beat());
-function presLine(uid){
-  const pr = pres[uid];
-  if (!pr) return '<small style="color:var(--mute)">ещё не заходил(а)</small>';
-  const last = pr.last && pr.last.toDate ? pr.last.toDate() : null;
-  const on = pr.vis && last && Date.now() - last.getTime() < 120000;
-  const seen = latestUpd() <= (pr.seenUpd || 0);
-  const at = pr.seenAt && pr.seenAt.toDate ? ' ' + fmt(pr.seenAt.toDate()) : '';
-  return `<small style="color:${on ? 'var(--ok)' : 'var(--mute)'}">${on ? '● в сети' : '○ был(а): ' + (last ? fmt(last) : '…')}</small><br><small style="color:${seen ? 'var(--ok)' : 'var(--no)'}">${seen ? '✓ видел(а) последние изменения' + at : '⚠ не видел(а) новые изменения'}</small>`;
-}
 const THEMES = [
   { id: 'auto', name: 'Авто', desc: 'Следует за системной темой', ico: 'A', dots: ['#1b2430', '#2a323d', '#3b82f6'] },
   { id: 'green', name: 'Зелёная', desc: 'Тёмный лес с зелёным акцентом', ico: '🌿', dots: ['#0b130e', '#121c15', '#b5de45'] },
@@ -505,8 +598,9 @@ function renderThemes(){
 }
 function applyTheme(){
   const r = resolvedTheme(); document.documentElement.setAttribute('data-theme', r);
-  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = ({ light: '#1f2a37', dark: '#12161c', green: '#0f1a12' })[r];
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = (lsGet('amoled', '0') === '1' && r !== 'light') ? '#000' : ({ light: '#1f2a37', dark: '#12161c', green: '#0f1a12' })[r];
   $('thm').textContent = r === 'light' ? '🌙' : '☀️';
+  try { renderPeople(); renderRating(); renderEvents(); setWho(); renderColor(); } catch (e) {}
   renderThemes();
 }
 function setTheme(t){ try { localStorage.setItem('theme', t); } catch (e) {} applyTheme(); }
@@ -519,7 +613,7 @@ let presets = [];
 const ICO = { red: '🛑', orange: '⚠️', blue: 'ℹ️' };
 const canEdit = () => me && (me.role === 'admin' || me.viewOnly !== true);
 function renderEvents(){
-  $('events').innerHTML = events.map(e => `<div class="ev k-${e.kind || 'red'}"><div class="evh"><b>${ICO[e.kind] || '🛑'} ${esc(e.title)}</b>${canEdit() ? `<span class="btns"><button class="ghost sm" data-ev="${e.id}">Изменить</button><button class="ghost sm" data-evx="${e.id}">Снять</button></span>` : ''}</div>${e.text ? '<p>' + esc(e.text) + '</p>' : ''}<small>${esc(e.by)}${e.ts ? ' · ' + fmt(e.ts.toDate()) : ''}</small></div>`).join('')
+  $('events').innerHTML = events.map(e => `<div class="ev k-${e.kind || 'red'}"><div class="evh"><b>${ICO[e.kind] || '🛑'} ${esc(e.title)}</b>${canEdit() ? `<span class="btns"><button class="ghost sm" data-ev="${e.id}">Изменить</button><button class="ghost sm" data-evx="${e.id}">Снять</button></span>` : ''}</div>${e.text ? '<p>' + esc(e.text) + '</p>' : ''}<small>${nm(e.by)}${e.ts ? ' · ' + fmt(e.ts.toDate()) : ''}</small></div>`).join('')
     + (canEdit() ? '<button class="ghost sm" id="evadd" style="margin-bottom:10px;color:var(--ink)">＋ Событие</button>' : '');
 }
 function markKind(){ document.querySelectorAll('#evkinds button').forEach(b => b.classList.toggle('on', b.dataset.k === evKind)); }
@@ -577,15 +671,265 @@ $('flt').onclick = e => { if (e.target.dataset.f) { flt = e.target.dataset.f; do
 function renderChips(){
   $('evchips').innerHTML = presets.map(c => `<span class="chw"><button class="ghost sm" data-p="${c.id}">${esc(c.title)}${c.text ? ' · ' + esc(c.text) : ''}</button>${isAdmin() ? `<button class="ghost sm x" data-pdel="${c.id}">✕</button>` : ''}</span>`).join('');
 }
-['name', 'email', 'pass'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); }));
+['name', 'code', 'email', 'pass'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); }));
 $('nmi').addEventListener('keydown', e => { if (e.key === 'Enter') $('nms').click(); });
 $('evt').addEventListener('keydown', e => { if (e.key === 'Enter') $('evx').focus(); });
 $('evx').addEventListener('keydown', e => { if (e.key === 'Enter') $('evs').click(); });
-['nm', 'em', 'bm'].forEach(id => $(id).addEventListener('click', e => { if (e.target === $(id)) $(id).classList.add('hide'); }));
+['nm', 'em', 'bm', 'cam', 'sm'].forEach(id => $(id).addEventListener('click', e => { if (e.target === $(id)) $(id).classList.add('hide'); }));
+$('out2').onclick = () => $('out').click();
+const APP_VER = '2026-10-09.4';
+let invites = [], colors = {};
+const randCode = () => { const a = new Uint8Array(6); crypto.getRandomValues(a); return Array.from(a, x => 'abcdefghjkmnpqrstuvwxyz23456789'[x % 31]).join(''); };
+function renderInvites(){
+  if (!isAdmin()) return;
+  const have = new Set(users.map(u => (u.email || '').toLowerCase()));
+  $('invlist').innerHTML = invites.map(v => `<div class="row"><span class="g">${esc(v.id)}<br><b style="font-size:1.1rem;letter-spacing:1px">${esc(v.code)}</b> <small style="color:${have.has(v.id) ? 'var(--ok)' : 'var(--mute)'}">${have.has(v.id) ? '✓ зарегистрирован' : 'ждёт регистрации'}</small></span><span class="btns"><button class="ghost sm" data-is="${v.id}">Отправить</button><button class="ghost sm" data-id="${v.id}">Удалить</button></span></div>`).join('') || '<div class="cnt">Приглашений пока нет</div>';
+}
+$('invadd').onclick = async () => {
+  const em = $('invem').value.trim().toLowerCase();
+  if (!/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(em)) { toast('Введите корректную почту'); return; }
+  try { await db.collection('invites').doc(em).set({ code: randCode(), by: me.name, ts: TS() }); $('invem').value = ''; } catch (err) { alert('Не удалось: ' + err.message); }
+};
+$('invlist').onclick = async e => {
+  const v = invites.find(x => x.id === (e.target.dataset.is || e.target.dataset.id)); if (!v) return;
+  if (e.target.dataset.is) {
+    const text = 'Регистрация в «Кто на месте»\nПочта: ' + v.id + '\nКод: ' + v.code;
+    try { if (navigator.share) await navigator.share({ text }); else { await navigator.clipboard.writeText(text); toast('Скопировано'); } } catch (x) {}
+  } else if (confirm('Удалить приглашение для ' + v.id + '?')) await db.collection('invites').doc(v.id).delete();
+};
+
+function fixColor(hex, dark){
+  const m = /^#([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return null;
+  const r = parseInt(m[1].slice(0, 2), 16) / 255, g = parseInt(m[1].slice(2, 4), 16) / 255, b = parseInt(m[1].slice(4), 16) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, sat = 0, l = (mx + mn) / 2;
+  if (mx !== mn) { const d = mx - mn; sat = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; }
+  l = dark ? Math.max(l, .62) : Math.min(l, .42);
+  return 'hsl(' + Math.round(h) + ',' + Math.round(sat * 100) + '%,' + Math.round(l * 100) + '%)';
+}
+function nm(name, onDark){
+  const c = fixColor(colors[name], onDark === undefined ? resolvedTheme() !== 'light' : onDark);
+  return c ? '<span style="color:' + c + ';font-weight:600">' + esc(name) + '</span>' : esc(name);
+}
+function setWho(){ if (me) $('who').innerHTML = nm(me.name, true) + (isAdmin() ? ' (админ)' : ''); }
+const COLS = ['#ff0000', '#0000ff', '#00ff00', '#b22222', '#ff7f50', '#9acd32', '#ff4500', '#2e8b57', '#daa520', '#d2691e', '#5f9ea0', '#1e90ff', '#ff69b4', '#8a2be2', '#00ff7f'];
+function renderColor(){
+  if (!me) return; const cur = (colors[me.name] || '').toLowerCase();
+  $('namepre').innerHTML = nm(me.name);
+  $('sws').innerHTML = COLS.map(c => `<button style="background:${c}" data-c="${c}" class="${cur === c ? 'sel' : ''}" aria-label="${c}"></button>`).join('');
+  if (/^#[0-9a-f]{6}$/i.test(cur)) $('colpick').value = cur;
+}
+async function saveColor(c){ if (!me) return; try { await db.collection('users').doc(me.uid).update({ color: c }); } catch (e) { alert('Не удалось сохранить цвет: ' + e.message); } }
+$('sws').onclick = e => { if (e.target.dataset.c) saveColor(e.target.dataset.c); };
+$('colpick').onchange = () => saveColor($('colpick').value);
+$('colreset').onclick = () => saveColor(firebase.firestore.FieldValue.delete());
+
+const FS = [0.85, 0.92, 1, 1.1, 1.22], FSN = ['Очень мелкий', 'Меньше', 'Обычный', 'Больше', 'Крупный'];
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+function applySettings(){
+  const d = document.documentElement, f = +lsGet('fs', 2), dn = lsGet('density', 'classic') === 'compact' ? 'compact' : 'classic';
+  d.setAttribute('data-amoled', lsGet('amoled', '0') === '1' ? '1' : '0');
+  d.setAttribute('data-density', dn);
+  d.style.setProperty('--fs', FS[f] || 1);
+  $('amo').checked = lsGet('amoled', '0') === '1'; $('fsr').value = f; $('fsn').textContent = FSN[f];
+  document.querySelectorAll('#dens button').forEach(b => b.classList.toggle('sel', b.dataset.d === dn));
+  const m = document.querySelector('meta[name=theme-color]'); if (m) { const r = resolvedTheme(); m.content = (lsGet('amoled', '0') === '1' && r !== 'light') ? '#000' : ({ light: '#1f2a37', dark: '#12161c', green: '#0f1a12' })[r]; }
+}
+$('amo').onchange = () => { lsSet('amoled', $('amo').checked ? '1' : '0'); applySettings(); };
+$('fsr').oninput = () => { lsSet('fs', $('fsr').value); applySettings(); };
+$('dens').onclick = e => { if (e.target.dataset.d) { lsSet('density', e.target.dataset.d); applySettings(); } };
+let chats = {}, curChat = null, msgUnsub = null, banUnsub = null, memUnsub = null, myBan = null, msgs = [], memBans = {}, lastChatPush = {}, scrollNext = false, compId = null;
+const chatAccess = () => !!me && (me.role === 'admin' || (me.chats || []).includes('c1'));
+const CHAT_IDS = ['c1'], FV = () => firebase.firestore.FieldValue, TSM = ms => firebase.firestore.Timestamp.fromMillis(ms);
+const isModOf = id => isAdmin() || !!(chats[id] && (chats[id].mods || []).includes(me.uid));
+const banActiveOf = b => !!b && (!b.until || (b.until.toMillis ? b.until.toMillis() : 0) > Date.now());
+function ensureChats(snap){
+  if (!isAdmin()) return;
+  const have = new Set(snap.docs.map(d => d.id));
+  CHAT_IDS.filter(id => !have.has(id)).forEach(id => db.collection('chats').doc(id).set({ name: 'Чат', mods: [], order: +id.slice(1) }).catch(() => {}));
+}
+function renderChatList(){
+  const ids = CHAT_IDS.filter(id => chats[id]);
+  $('clist').innerHTML = ids.length ? ids.map(id => `<button class="th" data-chat="${id}"><span class="thi">💬</span><span class="thn"><b>${esc(chats[id].name)}</b><small>${(chats[id].mods || []).length ? 'Модераторов: ' + chats[id].mods.length : 'Без модераторов'}</small></span></button>`).join('') : '<div class="box">Вас пока не добавили ни в один чат. Попросите администратора.</div>';
+  if (curChat && !chats[curChat]) closeChat();
+  else if (curChat) { $('cname').textContent = chats[curChat].name; $('cmem').classList.toggle('hide', !isModOf(curChat)); }
+  if (tab === 'chat' && !curChat && chats.c1) openChat('c1');
+}
+$('clist').onclick = e => { const b = e.target.closest('[data-chat]'); if (b) openChat(b.dataset.chat); };
+function openChat(id){
+  if (!chats[id]) return;
+  curChat = id; msgs = []; myBan = null; scrollNext = true;
+  $('clist').classList.add('hide'); $('cview').classList.remove('hide');
+  $('cname').textContent = chats[id].name; $('cmsgs').innerHTML = ''; $('cstat').textContent = '';
+  $('cmem').classList.toggle('hide', !isModOf(id)); $('cmi').disabled = $('csend').disabled = false;
+  msgUnsub = db.collection('chats').doc(id).collection('msgs').where('ts', '>=', TSM(Date.now() - 864e5)).orderBy('ts', 'desc').limit(60).onSnapshot(s => { rd(s);
+    msgs = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })).reverse(); renderMsgs();
+  }, () => { $('cstat').textContent = '🚫 Нет доступа к сообщениям этого чата.'; });
+  banUnsub = db.collection('chats').doc(id).collection('bans').doc(me.uid).onSnapshot(d => { rd(d); myBan = d.exists ? d.data({ serverTimestamps: 'estimate' }) : null; renderChatStat(); }, () => {});
+}
+function closeChat(){
+  [msgUnsub, banUnsub, memUnsub].forEach(f => f && f()); msgUnsub = banUnsub = memUnsub = null;
+  curChat = null; myBan = null; msgs = [];
+  $('cview').classList.add('hide'); $('clist').classList.remove('hide'); $('cmm').classList.add('hide');
+}
+$('cbell').onclick = () => { if (curChat) openBell('chat-' + curChat); };
+function renderChatStat(){
+  const act = banActiveOf(myBan), kick = act && myBan.kind === 'ban';
+  $('cstat').textContent = act ? (kick ? '🚫 Вы удалены из этого чата.' : '🔇 Вы в муте ' + (myBan.until && myBan.until.toDate ? 'до ' + fmt(myBan.until.toDate()) : 'без срока') + '.') : '';
+  $('cmi').disabled = $('csend').disabled = act;
+}
+function renderMsgs(){
+  const el = $('cmsgs'), near = el.scrollHeight - el.scrollTop - el.clientHeight < 80, mod = isModOf(curChat);
+  el.innerHTML = msgs.length ? msgs.map(m => {
+    const d = m.ts && m.ts.toDate ? m.ts.toDate() : new Date(), own = m.uid === me.uid;
+    const t = d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : fmt(d);
+    return `<div class="bub ${own ? 'me' : ''}"><div class="bh"><span>${own ? 'Вы' : nm(m.name)}</span><span><small>${t}</small>${mod || own ? ` <button class="mm" data-m="${m.id}">⋯</button>` : ''}</span></div>${esc(m.text)}</div>`;
+  }).join('') : '<div class="cnt" style="text-align:center;margin-top:20px">Сообщений пока нет. Сообщения хранятся 1 день.</div>';
+  if (near || scrollNext) { el.scrollTop = el.scrollHeight; scrollNext = false; }
+}
+async function sendMsg(){
+  if (!curChat || !me) return;
+  const text = $('cmi').value.trim().slice(0, 500); if (!text) return;
+  $('cmi').value = ''; const c = curChat;
+  try {
+    await db.collection('chats').doc(c).collection('msgs').add({ uid: me.uid, name: me.name, text, ts: TS(), exp: TSM(Date.now() + 864e5) });
+    const now = Date.now();
+    if (cfg && now - (lastChatPush[c] || 0) > 120000) { lastChatPush[c] = now; send('chat-' + c, (chats[c] || {}).name || 'Чат', me.name + ': ' + text.slice(0, 80), true).catch(() => {}); }
+  } catch (err) { $('cmi').value = text; toast('Не отправлено: нет прав (мут/бан) или нет связи'); }
+}
+$('csend').onclick = sendMsg;
+$('cmi').addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
+$('cmsgs').onclick = e => { const b = e.target.closest('[data-m]'); if (b) openMsgMenu(b.dataset.m); };
+function openMsgMenu(mid){
+  const m = msgs.find(x => x.id === mid); if (!m) return;
+  const own = m.uid === me.uid, tu = users.find(u => u.id === m.uid), tAdmin = tu && tu.role === 'admin', tMod = (chats[curChat].mods || []).includes(m.uid);
+  const canAct = isModOf(curChat) && !own && !tAdmin && (isAdmin() || !tMod);
+  $('camt').textContent = m.name; $('camx').textContent = m.text.slice(0, 100);
+  let h = `<button class="ghost" data-a="del" data-m="${m.id}" style="color:var(--no)">Удалить сообщение</button>`;
+  if (canAct) h += `<div class="cnt" style="margin:10px 0 4px">Мут автора</div><div class="chips"><button class="ghost sm" data-a="mute" data-u="${m.uid}" data-ms="600000">10 мин</button><button class="ghost sm" data-a="mute" data-u="${m.uid}" data-ms="3600000">1 час</button><button class="ghost sm" data-a="mute" data-u="${m.uid}" data-ms="86400000">1 день</button><button class="ghost sm" data-a="mute" data-u="${m.uid}" data-ms="0">Навсегда</button></div><button class="ghost" data-a="ban" data-u="${m.uid}" style="color:var(--no)">Бан в этом чате</button><button class="ghost" data-a="unban" data-u="${m.uid}">Снять мут / бан</button>`;
+  $('camb').innerHTML = h; $('cam').classList.remove('hide');
+}
+$('camc').onclick = () => $('cam').classList.add('hide');
+async function applyBan(uid, name, kind, ms){
+  try { await db.collection('chats').doc(curChat).collection('bans').doc(uid).set({ kind, until: ms ? TSM(Date.now() + ms) : null, by: me.uid, byName: me.name, name, ts: TS() }); toast(kind === 'ban' ? 'Забанен в этом чате' : 'Мут выдан'); } catch (e) { toast('Не удалось: ' + e.message); }
+}
+const unban = uid => db.collection('chats').doc(curChat).collection('bans').doc(uid).delete().then(() => toast('Снято')).catch(e => toast('Не удалось: ' + e.message));
+$('camb').onclick = async e => {
+  const a = e.target.dataset.a; if (!a || !curChat) return; $('cam').classList.add('hide');
+  if (a === 'del') { try { await db.collection('chats').doc(curChat).collection('msgs').doc(e.target.dataset.m).delete(); } catch (err) { toast('Не удалось удалить'); } return; }
+  const u = users.find(x => x.id === e.target.dataset.u), name = u ? u.name : '';
+  if (a === 'unban') unban(e.target.dataset.u); else applyBan(e.target.dataset.u, name, a === 'ban' ? 'ban' : 'mute', +e.target.dataset.ms || 0);
+};
+$('cmem').onclick = () => {
+  if (!curChat || !isModOf(curChat)) return;
+  $('cmm').classList.remove('hide'); if (memUnsub) memUnsub();
+  memUnsub = db.collection('chats').doc(curChat).collection('bans').onSnapshot(s => { rd(s); memBans = {}; s.docs.forEach(d => memBans[d.id] = d.data({ serverTimestamps: 'estimate' })); renderMem(); }, () => {});
+};
+$('cmmc').onclick = () => { if (memUnsub) memUnsub(); memUnsub = null; $('cmm').classList.add('hide'); };
+function renderMem(){
+  const c = curChat; if (!c || !chats[c]) return; const mods = chats[c].mods || [];
+  const list = users.filter(u => u.approved !== false && (u.role === 'admin' || (u.chats || []).includes(c) || mods.includes(u.id)));
+  $('cmmb').innerHTML = list.map(u => {
+    const b = memBans[u.id], act = banActiveOf(b), role = u.role === 'admin' ? 'админ' : mods.includes(u.id) ? 'модератор' : '';
+    const prot = u.id === me.uid || u.role === 'admin' || (!isAdmin() && mods.includes(u.id));
+    return `<div class="row"><span class="g">${nm(u.name)} <small style="color:var(--mute)">${role}</small>${act ? `<br><small style="color:var(--no)">${b.kind === 'ban' ? '🚫 бан' : '🔇 мут' + (b.until && b.until.toDate ? ' до ' + fmt(b.until.toDate()) : '')}</small>` : ''}</span>${prot ? '' : `<span class="btns">${act ? `<button class="ghost sm" data-a="unban" data-u="${u.id}">Снять</button>` : `<button class="ghost sm" data-a="mute" data-u="${u.id}" data-ms="3600000">Мут 1ч</button><button class="ghost sm" data-a="mute" data-u="${u.id}" data-ms="86400000">Мут 1д</button><button class="ghost sm" data-a="ban" data-u="${u.id}">Бан</button>`}</span>`}</div>`;
+  }).join('');
+}
+$('cmmb').onclick = e => {
+  const a = e.target.dataset.a; if (!a) return; const u = users.find(x => x.id === e.target.dataset.u); if (!u) return;
+  if (a === 'unban') unban(u.id); else applyBan(u.id, u.name, a === 'ban' ? 'ban' : 'mute', +e.target.dataset.ms || 0);
+};
+function renderAChats(){
+  if (!isAdmin()) return;
+  $('achats').innerHTML = CHAT_IDS.filter(id => chats[id]).map(id => `<div class="row"><span class="g">${esc(chats[id].name)}<br><small style="color:var(--mute)">модераторов: ${(chats[id].mods || []).length}</small></span><span class="btns"><button class="ghost sm" data-cr="${id}">Название</button><button class="ghost sm" data-cs="${id}">Состав</button></span></div>`).join('') || '<div class="cnt">Создаю чаты…</div>';
+}
+$('achats').onclick = async e => {
+  const r = e.target.dataset.cr, c = e.target.dataset.cs;
+  if (r) { const n = prompt('Название чата', chats[r].name); if (n && n.trim()) await db.collection('chats').doc(r).update({ name: n.trim().slice(0, 40) }); }
+  else if (c) { compId = c; $('smt').textContent = 'Состав: ' + chats[c].name; renderComp(); $('sm').classList.remove('hide'); }
+};
+function refreshComp(){ if (compId && !$('sm').classList.contains('hide')) renderComp(); }
+function renderComp(){
+  const c = compId; if (!c || !chats[c]) return; const mods = chats[c].mods || [];
+  $('smb').innerHTML = users.filter(u => u.approved !== false).map(u => {
+    const mem = u.role === 'admin' || (u.chats || []).includes(c) || mods.includes(u.id), mod = mods.includes(u.id);
+    return `<div class="row"><span class="g">${esc(u.name)}${u.role === 'admin' ? ' <small>(админ)</small>' : ''}</span>${u.role === 'admin' ? '' : `<span class="btns"><button class="${mem ? '' : 'ghost'} sm" data-tm="${u.id}">${mem ? '✓ Роль «чат»' : '+ Роль «чат»'}</button><button class="${mod ? '' : 'ghost'} sm" data-tmod="${u.id}">${mod ? '✓ Модератор' : '+ Модератор'}</button></span>`}</div>`;
+  }).join('');
+}
+$('smc').onclick = () => { $('sm').classList.add('hide'); compId = null; };
+$('smb').onclick = async e => {
+  const c = compId, tu = e.target.dataset.tm, tmod = e.target.dataset.tmod; if (!c) return;
+  try {
+    const b = db.batch();
+    if (tu) {
+      const u = users.find(x => x.id === tu), mem = (u.chats || []).includes(c) || (chats[c].mods || []).includes(tu);
+      b.update(db.collection('users').doc(tu), { chats: mem ? FV().arrayRemove(c) : FV().arrayUnion(c) });
+      if (mem) b.update(db.collection('chats').doc(c), { mods: FV().arrayRemove(tu) });
+      await b.commit();
+    } else if (tmod) {
+      const isM = (chats[c].mods || []).includes(tmod);
+      b.update(db.collection('chats').doc(c), { mods: isM ? FV().arrayRemove(tmod) : FV().arrayUnion(tmod) });
+      if (!isM) b.update(db.collection('users').doc(tmod), { chats: FV().arrayUnion(c) });
+      await b.commit();
+    }
+  } catch (err) { toast('Не удалось: ' + err.message); }
+};
+$('cclean').onclick = async () => {
+  if (!confirm('Удалить все сообщения старше суток?')) return;
+  const cut = TSM(Date.now() - 864e5); let n = 0;
+  try {
+    for (const id of CHAT_IDS.filter(x => chats[x])) for (let i = 0; i < 5; i++) {
+      const s = await db.collection('chats').doc(id).collection('msgs').where('ts', '<', cut).limit(400).get(); if (s.empty) break;
+      const b = db.batch(); s.docs.forEach(d => b.delete(d.ref)); await b.commit(); n += s.size;
+    }
+    $('cclmsg').textContent = 'Удалено сообщений: ' + n;
+  } catch (e) { $('cclmsg').textContent = 'Ошибка: ' + e.message; }
+};
+function autoClean(){
+  const day = pacDay(); if (!isAdmin() || !chats.c1 || localStorage.getItem('lastclean') === day) return;
+  try { localStorage.setItem('lastclean', day); } catch (e) {}
+  (async () => { try { for (let i = 0; i < 3; i++) { const s = await db.collection('chats').doc('c1').collection('msgs').where('ts', '<', TSM(Date.now() - 864e5)).limit(400).get(); if (s.empty) break; const b = db.batch(); s.docs.forEach(d => b.delete(d.ref)); await b.commit(); } } catch (e) {} })();
+}
+function flushUsage(force){
+  if (!me || me.pending) return; uLoad();
+  const str = USG.day + ',' + USG.r + ',' + USG.w + ',' + USG.d; if (str === lastFlushStr) return;
+  const now = Date.now(); if (!force && now - lastFlush < 600000) return;
+  lastFlush = now; lastFlushStr = str; noCount = true;
+  try { db.collection('usage').doc(USG.day + '_' + me.uid).set({ day: USG.day, uid: me.uid, name: me.name, r: USG.r, w: USG.w, d: USG.d, ts: TS() }).catch(() => {}); } finally { noCount = false; }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushUsage(); });
+window.addEventListener('pagehide', () => flushUsage(true));
+setInterval(() => { if (!document.hidden) flushUsage(true); }, 1800000);
+let usageUnsub = null, usageDocs = [];
+function startUsage(){ if (usageUnsub || !isAdmin()) return; usageUnsub = db.collection('usage').where('day', '==', pacDay()).onSnapshot(s => { rd(s); usageDocs = s.docs.map(d => d.data()); renderUsage(); }, () => {}); }
+function stopUsage(){ if (usageUnsub) { usageUnsub(); usageUnsub = null; } }
+function limBar(v, lim, label){
+  const pc = Math.min(100, Math.round(v / lim * 100)), col = pc >= 90 ? 'var(--no)' : pc >= 60 ? 'var(--warn)' : 'var(--ok)';
+  return `<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>${label}</span><b>${Math.round(v).toLocaleString('ru-RU')} / ${lim.toLocaleString('ru-RU')} (${pc}%)</b></div><div style="height:8px;border-radius:4px;background:var(--line);overflow:hidden"><div style="height:100%;width:${pc}%;background:${col}"></div></div></div>`;
+}
+function renderUsage(){
+  if (!isAdmin()) return; uLoad();
+  let r = USG.r, w = USG.w, d = USG.d, n = 1;
+  usageDocs.forEach(x => { if (x.uid !== me.uid) { r += x.r || 0; w += x.w || 0; d += x.d || 0; n++; } });
+  $('ubox').innerHTML = limBar(r, 50000, 'Чтения сегодня') + limBar(w, 20000, 'Записи') + limBar(d, 20000, 'Удаления') + `<div class="cnt">Телефонов в расчёте: ${n}. Сутки считаются по тихоокеанскому времени, счётчики там обнуляются в полночь.</div>`;
+}
+setInterval(() => { if (usageUnsub) renderUsage(); }, 20000);
+function renderCalc(){
+  const g = (id, dflt) => { const v = parseFloat($(id).value); return isNaN(v) || v < 0 ? dflt : v; };
+  const ids = ['calU', 'calO', 'calM', 'calC', 'calCu']; ids.forEach(id => { try { localStorage.setItem(id, $(id).value); } catch (e) {} });
+  const Un = g('calU', 20), O = g('calO', 10), M = g('calM', 150), C = g('calC', 0), Cu = g('calCu', 0);
+  const base = Un * O * 65 + M * (Un + 7), per = 0.5 * Cu + 3;
+  const reads = base + C * per, writes = M * 3 + C + Un * 20, dels = C, mb = Math.round(reads * 30 / 1024);
+  const maxC = per > 0 ? Math.max(0, Math.floor((50000 - base) / per)) : 0, pc = reads / 50000;
+  const verdict = pc < 0.6 ? '✅ Хватает с запасом' : pc < 0.9 ? '⚠️ Хватает, но запас небольшой' : '⛔ Не хватит: чтения закончатся раньше конца суток';
+  $('calcout').innerHTML = limBar(reads, 50000, 'Чтения в день') + limBar(writes, 20000, 'Записи') + limBar(dels, 20000, 'Удаления')
+    + `<div class="cnt">Трафик ≈ ${mb.toLocaleString('ru-RU')} МБ в месяц из 10 240 МБ.</div><div><b>${verdict}</b></div><div class="cnt" style="margin-top:4px">При таких условиях чат потянет до ≈ ${maxC.toLocaleString('ru-RU')} сообщений в день. Расчёт примерный (±30%).</div>`;
+}
+['calU', 'calO', 'calM', 'calC', 'calCu'].forEach(id => { try { const v = localStorage.getItem(id); if (v !== null) $(id).value = v; } catch (e) {} $(id).addEventListener('input', renderCalc); });
 let stats = [], noteId = null;
 const CHIPS = ['Ушёл на час', 'Уехал по делам', 'Обед', 'На совещании', 'Командировка'];
 function renderRating(){
-  $('ratebox').innerHTML = stats.length ? stats.map((s, i) => `<div class="row"><b style="width:28px">${i + 1}</b><span class="g">${esc(s.name)}${me && s.id === me.uid ? ' (вы)' : ''}</span><b>${s.count}</b></div>`).join('') : 'Пока никто не отмечал';
+  $('ratebox').innerHTML = stats.length ? stats.map((s, i) => `<div class="row"><b style="width:28px">${i + 1}</b><span class="g">${nm(s.name)}${me && s.id === me.uid ? ' (вы)' : ''}</span><b>${s.count}</b></div>`).join('') : 'Пока никто не отмечал';
 }
 function renderARate(){
   if (!isAdmin()) return;
@@ -619,14 +963,21 @@ $('nmc').onclick = () => $('nm').classList.add('hide');
 $('nms').onclick = async () => {
   const p = people.find(x => x.id === noteId); if (!p || !me) return;
   const text = $('nmi').value.trim().slice(0, 80), b = db.batch();
-  b.update(db.collection('people').doc(p.id), { note: text, upd: TS() });
+  b.update(db.collection('people').doc(p.id), { note: text });
   b.set(db.collection('logs').doc(), { personId: p.id, name: p.name, kind: 'note', note: text, present: !!p.present, ts: TS(), byUid: me.uid, byName: me.name });
   try { await b.commit(); $('nm').classList.add('hide'); push(p.id, p.name + ': примечание', (text || 'примечание убрано') + ' · ' + me.name, p.present); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
 };
 
 mode(false);
-renderStatus(); updateBellUi(); applyTheme(); renderEvents();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+renderStatus(); updateBellUi(); applyTheme(); renderEvents(); applySettings(); $('ver').textContent = APP_VER;
+if ('serviceWorker' in navigator) {
+  const hadCtl = !!navigator.serviceWorker.controller; let reloaded = false;
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    reg.update().catch(() => {});
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+  }).catch(() => {});
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloaded || !hadCtl) return; reloaded = true; location.reload(); });
+}
 </script>
 </body>
 </html>
