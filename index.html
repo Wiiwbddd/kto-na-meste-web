@@ -103,6 +103,15 @@ input[type=range]{padding:0;margin:8px 0;accent-color:var(--acc)}
 .cin{display:flex;gap:8px;padding-top:8px}.cin input{margin:0;flex:1}.cin button{flex:none;min-width:52px}
 #camb>button{width:100%;margin-bottom:8px}
 .calc label{display:block}
+.nk{font-weight:600}.rb{margin-right:2px}
+.st-bg{-webkit-background-clip:text;background-clip:text;color:transparent}
+.st-anim{animation:shim 3s linear infinite}
+@keyframes shim{from{background-position:0 0}to{background-position:-200% 0}}
+.st-rb{background-image:linear-gradient(90deg,#ff5a5a,#ffb84d,#ffe94d,#5adf7a,#4dc3ff,#b36bff,#ff5a5a);background-size:200% 100%}
+.st-gold{background-image:linear-gradient(90deg,#b8860b,#ffd700,#fff3a0,#ffd700,#b8860b);background-size:200% 100%}
+.st-neon{color:#fff;text-shadow:0 0 4px var(--nc),0 0 10px var(--nc),0 0 20px var(--nc)}
+:root[data-theme="light"] .st-neon{color:var(--nc);text-shadow:0 0 5px var(--nc)}
+@media (prefers-reduced-motion:reduce){.st-anim{animation:none}}
 </style>
 </head>
 <body>
@@ -157,6 +166,7 @@ input[type=range]{padding:0;margin:8px 0;accent-color:var(--acc)}
     <div class="box"><h2>Размер текста</h2><div id="fsp" style="margin-bottom:6px">Съешь ещё этих мягких французских булок</div><input type="range" id="fsr" min="0" max="4" step="1"><div class="fsl"><span>Меньше</span><span id="fsn">Обычный</span><span>Больше</span></div></div>
     <div class="box"><h2>Стиль списка</h2><div class="dens" id="dens"><button data-d="classic">Классический</button><button data-d="compact">Компактный</button></div></div>
     <div class="box"><h2>Цвет имени</h2><div id="namepre" style="font-size:1.1rem;margin-bottom:8px"></div><div class="sws" id="sws"></div><div style="display:flex;gap:8px;align-items:center"><input type="color" id="colpick" style="width:56px;height:40px;padding:2px;margin:0"><button class="ghost sm" id="colreset" style="color:var(--ink)">Сбросить цвет</button></div></div>
+    <div class="box"><h2>Ранг и косметика</h2><div id="rankbox"></div></div>
     <div class="box"><h2>Уведомления</h2>
       <button class="ghost" id="suball" style="width:100%;color:var(--ink)">🔔 Уведомления обо всех</button>
       <div id="pst" class="cnt" style="margin-top:8px"></div></div>
@@ -397,7 +407,7 @@ function startData(){
     }
   }, () => {}));
   subs.push(db.collection('stats').orderBy('count','desc').onSnapshot(s => { rd(s);
-    stats = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRating(); renderARate();
+    stats = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRating(); renderARate(); renderPeople(); renderEvents(); setWho(); renderRankBox();
   }, () => {}));
   if (canLogs()) subs.push(db.collection('logs').orderBy('ts','desc').limit(100).onSnapshot(s => { rd(s);
     const items = s.docs.map(d => d.data({ serverTimestamps: 'estimate' }));
@@ -408,7 +418,7 @@ function startData(){
   }, () => {}));
   
   subs.push(db.collection('users').orderBy('name').onSnapshot(s => { rd(s);
-    users = s.docs.map(d => ({ id: d.id, ...d.data() })); colors = {}; users.forEach(u => { if (u.color) colors[u.name] = u.color; });
+    users = s.docs.map(d => ({ id: d.id, ...d.data() })); colors = {}; prof = {}; users.forEach(u => { if (u.color) colors[u.name] = u.color; prof[u.name] = { style: u.style, badge: u.badge }; });
     if (isAdmin()) { renderUsers(); renderInvites(); refreshComp(); }
     renderPeople(); renderEvents(); renderRating(); setWho(); renderColor();
     const pn = users.filter(x => x.approved === false).length; $('tadmin').textContent = 'Админ' + (pn ? ' (' + pn + ')' : '');
@@ -677,8 +687,8 @@ $('evt').addEventListener('keydown', e => { if (e.key === 'Enter') $('evx').focu
 $('evx').addEventListener('keydown', e => { if (e.key === 'Enter') $('evs').click(); });
 ['nm', 'em', 'bm', 'cam', 'sm'].forEach(id => $(id).addEventListener('click', e => { if (e.target === $(id)) $(id).classList.add('hide'); }));
 $('out2').onclick = () => $('out').click();
-const APP_VER = '2026-10-09.4';
-let invites = [], colors = {};
+const APP_VER = '2026-10-09.5';
+let invites = [], colors = {}, prof = {};
 const randCode = () => { const a = new Uint8Array(6); crypto.getRandomValues(a); return Array.from(a, x => 'abcdefghjkmnpqrstuvwxyz23456789'[x % 31]).join(''); };
 function renderInvites(){
   if (!isAdmin()) return;
@@ -698,23 +708,74 @@ $('invlist').onclick = async e => {
   } else if (confirm('Удалить приглашение для ' + v.id + '?')) await db.collection('invites').doc(v.id).delete();
 };
 
-function fixColor(hex, dark){
+const RANKS = [
+  { min: 0, e: '🌱', n: 'Новичок' }, { min: 25, e: '🥉', n: 'Бронза' }, { min: 75, e: '🥈', n: 'Серебро' }, { min: 150, e: '🥇', n: 'Золото' },
+  { min: 300, e: '💎', n: 'Алмаз' }, { min: 600, e: '🔮', n: 'Мастер' }, { min: 1000, e: '🏆', n: 'Чемпион' }, { min: 2000, e: '👑', n: 'Легенда' }
+];
+const STYLES = [
+  { id: 'plain', n: 'Обычный', need: 0 }, { id: 'gradient', n: 'Градиент', need: 2 }, { id: 'glow', n: 'Свечение', need: 3 }, { id: 'shimmer', n: 'Переливается', need: 4 },
+  { id: 'rainbow', n: 'Радуга', need: 5 }, { id: 'neon', n: 'Неон', need: 6 }, { id: 'legend', n: 'Золото легенды', need: 7 }
+];
+const BADGES = ['🔥', '⚡', '🌈', '🎯', '🚀', '🦁', '🐺', '🦅', '🐉', '🎮', '🍀', '🌟'];
+const rankIdx = c => { let i = 0; RANKS.forEach((r, k) => { if (c >= r.min) i = k; }); return i; };
+const cntOf = n => ((stats || []).find(x => x.name === n) || {}).count || 0;
+const styleUnlocked = (id, c) => { const st = STYLES.find(x => x.id === id); return !!st && rankIdx(c) >= st.need; };
+function hslOf(hex, dark){
   const m = /^#([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return null;
   const r = parseInt(m[1].slice(0, 2), 16) / 255, g = parseInt(m[1].slice(2, 4), 16) / 255, b = parseInt(m[1].slice(4), 16) / 255;
   const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, sat = 0, l = (mx + mn) / 2;
   if (mx !== mn) { const d = mx - mn; sat = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; }
   l = dark ? Math.max(l, .62) : Math.min(l, .42);
-  return 'hsl(' + Math.round(h) + ',' + Math.round(sat * 100) + '%,' + Math.round(l * 100) + '%)';
+  return [Math.round(h), Math.round(sat * 100), Math.round(l * 100)];
+}
+const hsl = a => 'hsl(' + ((a[0] % 360) + 360) % 360 + ',' + a[1] + '%,' + a[2] + '%)';
+function nameHtml(name, o){
+  const p = hslOf(o.hex, o.dark), bs = p || (o.dark ? [215, 90, 68] : [215, 80, 42]);
+  const c = hsl(bs), c2 = hsl([bs[0] + 70, bs[1], bs[2]]), cl = hsl([bs[0], bs[1], o.dark ? Math.min(90, bs[2] + 22) : Math.max(22, bs[2] - 18)]);
+  let cls = 'nk', st = p ? 'color:' + c : '';
+  switch (o.style) {
+    case 'gradient': cls += ' st-bg'; st = 'background-image:linear-gradient(90deg,' + c + ',' + c2 + ')'; break;
+    case 'glow': st = 'color:' + c + ';text-shadow:0 0 6px ' + c + ',0 0 14px ' + c; break;
+    case 'shimmer': cls += ' st-bg st-anim'; st = 'background-image:linear-gradient(90deg,' + c + ',' + cl + ',' + c + ');background-size:200% 100%'; break;
+    case 'rainbow': cls += ' st-bg st-anim st-rb'; st = ''; break;
+    case 'neon': cls += ' st-neon'; st = '--nc:' + c; break;
+    case 'legend': cls += ' st-bg st-anim st-gold'; st = ''; break;
+  }
+  const rk = rankIdx(o.cnt || 0), pre = (rk >= 1 ? RANKS[rk].e : '') + (o.badge || '');
+  return '<span class="nm">' + (pre ? '<span class="rb">' + pre + '</span> ' : '') + '<span class="' + cls + '"' + (st ? ' style="' + st + '"' : '') + '>' + esc(name) + '</span></span>';
 }
 function nm(name, onDark){
-  const c = fixColor(colors[name], onDark === undefined ? resolvedTheme() !== 'light' : onDark);
-  return c ? '<span style="color:' + c + ';font-weight:600">' + esc(name) + '</span>' : esc(name);
+  const dark = onDark === undefined ? resolvedTheme() !== 'light' : onDark, c = cntOf(name), pr = prof[name] || {};
+  return nameHtml(name, { style: styleUnlocked(pr.style, c) ? pr.style : 'plain', badge: rankIdx(c) >= 1 ? pr.badge : '', cnt: c, hex: colors[name], dark });
 }
+function myRankHtml(){
+  if (!me) return '';
+  const c = cntOf(me.name), ri = rankIdx(c), r = RANKS[ri], nx = RANKS[ri + 1];
+  const pc = nx ? Math.min(100, Math.round((c - r.min) / (nx.min - r.min) * 100)) : 100;
+  return `<div style="margin-bottom:12px"><div style="font-size:1.1rem">${r.e} <b>${r.n}</b> · ${c}</div>${nx ? `<div class="cnt" style="margin:4px 0">До ${nx.e} ${nx.n}: ещё ${nx.min - c}</div>` : '<div class="cnt" style="margin:4px 0">Максимальный ранг</div>'}<div style="height:8px;border-radius:4px;background:var(--line);overflow:hidden"><div style="height:100%;width:${pc}%;background:var(--acc)"></div></div></div>`;
+}
+async function saveProf(o){ try { await db.collection('users').doc(me.uid).update(o); } catch (e) { toast('Не удалось сохранить: ' + e.message); } }
+function renderRankBox(){
+  if (!me || !$('rankbox')) return;
+  const c = cntOf(me.name), ri = rankIdx(c), pr = prof[me.name] || {}, dark = resolvedTheme() !== 'light', cur = styleUnlocked(pr.style, c) ? pr.style : 'plain', cb = ri >= 1;
+  let h = myRankHtml() + '<div class="cnt" style="margin:8px 0 4px">Значок' + (cb ? '' : ' (с ранга 🥉 Бронза)') + '</div><div class="sws">'
+    + BADGES.map(b => `<button class="${pr.badge === b ? 'sel' : ''}" style="background:var(--bg);font-size:1.2rem;${cb ? '' : 'opacity:.35'}" data-bd="${b}" ${cb ? '' : 'disabled'}>${b}</button>`).join('')
+    + `<button class="ghost sm" style="width:auto;height:36px;border-radius:18px;color:var(--ink)" data-bd="" ${cb ? '' : 'disabled'}>Без значка</button></div>`;
+  h += '<div class="cnt" style="margin:8px 0 4px">Стиль ника</div>' + STYLES.map(st => {
+    const lk = ri < st.need;
+    return `<button class="th ${st.id === cur ? 'sel' : ''}" data-sty="${st.id}" ${lk ? 'disabled style="opacity:.55"' : ''}><span class="thn"><b>${nameHtml(me.name, { style: st.id, badge: '', cnt: c, hex: colors[me.name], dark })}</b><small>${st.n}${lk ? ' · 🔒 с ранга ' + RANKS[st.need].e + ' ' + RANKS[st.need].n : ''}</small></span>${st.id === cur ? '<span class="tick">✓</span>' : ''}</button>`;
+  }).join('');
+  $('rankbox').innerHTML = h;
+}
+$('rankbox').onclick = e => {
+  const b = e.target.closest('[data-bd],[data-sty]'); if (!b || b.disabled || !me) return;
+  if (b.dataset.sty !== undefined) saveProf({ style: b.dataset.sty }); else saveProf({ badge: b.dataset.bd ? b.dataset.bd : FV().delete() });
+};
 function setWho(){ if (me) $('who').innerHTML = nm(me.name, true) + (isAdmin() ? ' (админ)' : ''); }
 const COLS = ['#ff0000', '#0000ff', '#00ff00', '#b22222', '#ff7f50', '#9acd32', '#ff4500', '#2e8b57', '#daa520', '#d2691e', '#5f9ea0', '#1e90ff', '#ff69b4', '#8a2be2', '#00ff7f'];
 function renderColor(){
   if (!me) return; const cur = (colors[me.name] || '').toLowerCase();
-  $('namepre').innerHTML = nm(me.name);
+  $('namepre').innerHTML = nm(me.name); renderRankBox();
   $('sws').innerHTML = COLS.map(c => `<button style="background:${c}" data-c="${c}" class="${cur === c ? 'sel' : ''}" aria-label="${c}"></button>`).join('');
   if (/^#[0-9a-f]{6}$/i.test(cur)) $('colpick').value = cur;
 }
@@ -929,7 +990,7 @@ function renderCalc(){
 let stats = [], noteId = null;
 const CHIPS = ['Ушёл на час', 'Уехал по делам', 'Обед', 'На совещании', 'Командировка'];
 function renderRating(){
-  $('ratebox').innerHTML = stats.length ? stats.map((s, i) => `<div class="row"><b style="width:28px">${i + 1}</b><span class="g">${nm(s.name)}${me && s.id === me.uid ? ' (вы)' : ''}</span><b>${s.count}</b></div>`).join('') : 'Пока никто не отмечал';
+  $('ratebox').innerHTML = myRankHtml() + (stats.length ? stats.map((s, i) => `<div class="row"><b style="width:28px">${i + 1}</b><span class="g">${nm(s.name)}${me && s.id === me.uid ? ' (вы)' : ''}<br><small style="color:var(--mute)">${RANKS[rankIdx(s.count)].n}</small></span><b>${s.count}</b></div>`).join('') : 'Пока никто не отмечал');
 }
 function renderARate(){
   if (!isAdmin()) return;
