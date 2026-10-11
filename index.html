@@ -347,7 +347,7 @@ $('go').onclick = async () => {
 $('out').onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(u => {
-  unsubs.forEach(f => f()); unsubs = []; me = null;
+  unsubs.forEach(f => f()); unsubs = []; dataUnsubs.forEach(f => f()); dataUnsubs = []; stopAllTabs(); stopUsage(); lastSig = ''; me = null;
   if (!u) {
     $('auth').classList.remove('hide'); $('app').classList.add('hide'); $('pending').classList.add('hide'); $('out').classList.add('hide'); $('who').textContent = '';
     return;
@@ -364,7 +364,8 @@ auth.onAuthStateChanged(u => {
     $('tchat').classList.toggle('hide', !chatAccess());
     $('tadmin').classList.toggle('hide', !isAdmin());
     if ((tab === 'logs' && !canLogs()) || (tab === 'admin' && !isAdmin()) || (tab === 'chat' && !chatAccess())) show('list');
-    startData();
+    const sig = [me.role, me.canLogs, me.viewOnly, (me.chats || []).join(',')].join('|');
+    if (sig !== lastSig) { lastSig = sig; startData(); }
   }));
 });
 
@@ -375,27 +376,50 @@ function show(t){
   ['list','rating','chat','logs','admin','more'].forEach(x => $(x).classList.toggle('hide', x !== t));
   if (t !== 'chat' && curChat) closeChat();
   if (t === 'chat' && !curChat && chats.c1) openChat('c1');
-  if (t === 'admin') { startUsage(); renderCalc(); renderUsage(); } else stopUsage();
+  if (t === 'admin') { renderCalc(); renderUsage(); }
+  ensureForTab(t);
 }
 $('tabs').onclick = e => { if (e.target.dataset.t) show(e.target.dataset.t); };
 
 // ---------- данные ----------
 let dataUnsubs = [], people = [], users = [];
+let tabSubs = {}, lastSig = '', presetsAt = 0;
+function stopTab(k){ if (tabSubs[k]) { tabSubs[k].forEach(f => f()); delete tabSubs[k]; } }
+function stopAllTabs(){ Object.keys(tabSubs).forEach(stopTab); }
+function needLogs(){ if (tabSubs.logs) return; tabSubs.logs = [db.collection('logs').orderBy('ts','desc').limit(60).onSnapshot(s => { rd(s);
+    const items = s.docs.map(d => d.data({ serverTimestamps: 'estimate' }));
+    $('lempty').classList.toggle('hide', items.length > 0);
+    $('lempty').textContent = 'Записей пока нет';
+    $('logbox').innerHTML = items.map(l =>
+      `<div class="log"><b>${esc(l.name)}</b> — ${l.kind === 'note' ? (l.note ? '📝 ' + esc(l.note) : 'убрал примечание') : (l.present ? 'на месте' : 'ушёл')}<span>${fmt(l.ts && l.ts.toDate())} · отметил: ${nm(l.byName)}</span></div>`).join('');
+  }, () => {})]; }
+function needInvites(){ if (tabSubs.invites) return; tabSubs.invites = [db.collection('invites').onSnapshot(s => { rd(s); invites = s.docs.map(d => ({ id: d.id, ...d.data() })); renderInvites(); }, () => {})]; }
+function needChats(){
+  if (tabSubs.chats) return;
+  if (isAdmin()) tabSubs.chats = [db.collection('chats').onSnapshot(s => { rd(s); chats = {}; s.docs.forEach(d => chats[d.id] = { id: d.id, ...d.data() }); ensureChats(s); renderChatList(); renderAChats(); refreshComp(); autoClean(); }, () => {})];
+  else { chats = {}; tabSubs.chats = (me.chats || []).map(id => db.collection('chats').doc(id).onSnapshot(d => { rd(d); if (d.exists) chats[id] = { id, ...d.data() }; else delete chats[id]; renderChatList(); }, () => {})); }
+}
+async function loadPresets(force){
+  if (!force && Date.now() - presetsAt < 600000) return;
+  try {
+    const s = await db.collection('presets').orderBy('title').get(); rd(s);
+    presets = s.docs.map(d => ({ id: d.id, ...d.data() })); presetsAt = Date.now();
+    renderAPresets(); if (!$('em').classList.contains('hide')) renderChips();
+  } catch (e) {}
+}
+function ensureForTab(t){
+  if (!me || me.pending) return;
+  if (t === 'logs' && canLogs()) needLogs(); else stopTab('logs');
+  if (t === 'admin' && isAdmin()) { needInvites(); loadPresets(); startUsage(); } else { stopTab('invites'); stopUsage(); }
+  if ((t === 'chat' && chatAccess()) || (t === 'admin' && isAdmin())) needChats(); else stopTab('chats');
+}
 function startData(){
-  dataUnsubs.forEach(f => f()); dataUnsubs = [];
-  unsubs = unsubs.filter(f => !dataUnsubs.includes(f));
+  stopAllTabs(); dataUnsubs.forEach(f => f()); dataUnsubs = [];
   const subs = [];
   subs.push(db.collection('people').orderBy('name').onSnapshot(s => { rd(s);
     people = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
     renderPeople(); renderAdminPeople();
   }));
-  if (isAdmin()) subs.push(db.collection('invites').onSnapshot(s => { rd(s); invites = s.docs.map(d => ({ id: d.id, ...d.data() })); renderInvites(); }, () => {}));
-  subs.push(db.collection('presets').orderBy('title').onSnapshot(s => { rd(s);
-    presets = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAPresets(); if (!$('em').classList.contains('hide')) renderChips();
-  }, () => {}));
-  if (!isAdmin()) chats = {};
-  if (isAdmin()) subs.push(db.collection('chats').onSnapshot(s => { rd(s); chats = {}; s.docs.forEach(d => chats[d.id] = { id: d.id, ...d.data() }); ensureChats(s); renderChatList(); renderAChats(); refreshComp(); autoClean(); }, () => {}));
-  else if (chatAccess()) (me.chats || []).forEach(id => subs.push(db.collection('chats').doc(id).onSnapshot(d => { rd(d); if (d.exists) chats[id] = { id, ...d.data() }; else delete chats[id]; renderChatList(); }, () => {})));
   subs.push(db.collection('events').orderBy('ts','desc').onSnapshot(s => { rd(s);
     events = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })); renderEvents();
   }, () => {}));
@@ -409,21 +433,14 @@ function startData(){
   subs.push(db.collection('stats').orderBy('count','desc').onSnapshot(s => { rd(s);
     stats = s.docs.map(d => ({ id: d.id, ...d.data() })); renderRating(); renderARate(); renderPeople(); renderEvents(); setWho(); renderRankBox();
   }, () => {}));
-  if (canLogs()) subs.push(db.collection('logs').orderBy('ts','desc').limit(100).onSnapshot(s => { rd(s);
-    const items = s.docs.map(d => d.data({ serverTimestamps: 'estimate' }));
-    $('lempty').classList.toggle('hide', items.length > 0);
-    $('lempty').textContent = 'Записей пока нет';
-    $('logbox').innerHTML = items.map(l =>
-      `<div class="log"><b>${esc(l.name)}</b> — ${l.kind === 'note' ? (l.note ? '📝 ' + esc(l.note) : 'убрал примечание') : (l.present ? 'на месте' : 'ушёл')}<span>${fmt(l.ts && l.ts.toDate())} · отметил: ${nm(l.byName)}</span></div>`).join('');
-  }, () => {}));
-  
   subs.push(db.collection('users').orderBy('name').onSnapshot(s => { rd(s);
     users = s.docs.map(d => ({ id: d.id, ...d.data() })); colors = {}; prof = {}; users.forEach(u => { if (u.color) colors[u.name] = u.color; prof[u.name] = { style: u.style, badge: u.badge }; });
     if (isAdmin()) { renderUsers(); renderInvites(); refreshComp(); }
     renderPeople(); renderEvents(); renderRating(); setWho(); renderColor();
     const pn = users.filter(x => x.approved === false).length; $('tadmin').textContent = 'Админ' + (pn ? ' (' + pn + ')' : '');
   }));
-  dataUnsubs = subs; unsubs.push(() => dataUnsubs.forEach(f => f()));
+  dataUnsubs = subs;
+  ensureForTab(tab);
 }
 
 function renderPeople(){
@@ -628,6 +645,7 @@ function renderEvents(){
 }
 function markKind(){ document.querySelectorAll('#evkinds button').forEach(b => b.classList.toggle('on', b.dataset.k === evKind)); }
 function openEv(id){
+  loadPresets();
   const ev = id ? events.find(x => x.id === id) : null; evId = ev ? ev.id : null;
   $('evt').value = ev ? ev.title : ''; $('evx').value = ev ? (ev.text || '') : ''; evKind = ev ? (ev.kind || 'red') : 'red';
   renderChips();
@@ -642,7 +660,7 @@ $('events').onclick = e => {
 $('evchips').onclick = e => {
   if (e.target.dataset.pdel) {
     const c0 = presets.find(x => x.id === e.target.dataset.pdel);
-    if (c0 && confirm('Удалить «' + c0.title + '» из частых?')) db.collection('presets').doc(c0.id).delete().catch(err => alert('Не удалось: ' + err.message));
+    if (c0 && confirm('Удалить «' + c0.title + '» из частых?')) db.collection('presets').doc(c0.id).delete().then(() => loadPresets(true)).catch(err => alert('Не удалось: ' + err.message));
     return;
   }
   const c = presets.find(x => x.id === e.target.dataset.p); if (c) { $('evt').value = c.title; $('evx').value = c.text || ''; evKind = c.kind || 'red'; markKind(); } };
@@ -665,7 +683,7 @@ $('evdel').onclick = async () => {
 $('evpreset').onclick = async () => {
   const title = $('evt').value.trim(), text = $('evx').value.trim();
   if (!isAdmin() || !title) { toast('Укажите название'); return; }
-  try { await db.collection('presets').add({ title, text, kind: evKind }); toast('Добавлено в частые'); } catch (err) { alert('Не удалось: ' + err.message); }
+  try { await db.collection('presets').add({ title, text, kind: evKind }); toast('Добавлено в частые'); loadPresets(true); } catch (err) { alert('Не удалось: ' + err.message); }
 };
 function renderAPresets(){
   if (!isAdmin()) return;
@@ -675,6 +693,7 @@ $('aprs').onclick = async e => {
   const id = e.target.dataset.pe || e.target.dataset.pd, c = presets.find(x => x.id === id); if (!c) return;
   if (e.target.dataset.pd) { if (confirm('Удалить «' + c.title + '»?')) await db.collection('presets').doc(id).delete(); }
   else { const t = prompt('Название', c.title); if (t === null) return; const x = prompt('Описание', c.text || ''); if (t.trim()) await db.collection('presets').doc(id).update({ title: t.trim(), text: (x || '').trim() }); }
+  loadPresets(true);
 };
 const busy = new Set(); let flt = 'all';
 $('flt').onclick = e => { if (e.target.dataset.f) { flt = e.target.dataset.f; document.querySelectorAll('#flt button').forEach(b => b.classList.toggle('on', b.dataset.f === flt)); renderPeople(); } };
@@ -687,7 +706,7 @@ $('evt').addEventListener('keydown', e => { if (e.key === 'Enter') $('evx').focu
 $('evx').addEventListener('keydown', e => { if (e.key === 'Enter') $('evs').click(); });
 ['nm', 'em', 'bm', 'cam', 'sm'].forEach(id => $(id).addEventListener('click', e => { if (e.target === $(id)) $(id).classList.add('hide'); }));
 $('out2').onclick = () => $('out').click();
-const APP_VER = '2026-10-09.5';
+const APP_VER = '2026-10-09.6';
 let invites = [], colors = {}, prof = {};
 const randCode = () => { const a = new Uint8Array(6); crypto.getRandomValues(a); return Array.from(a, x => 'abcdefghjkmnpqrstuvwxyz23456789'[x % 31]).join(''); };
 function renderInvites(){
