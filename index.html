@@ -10,9 +10,9 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Кто на месте</title>
 <style>
-:root{--bg:#eef0f2;--card:#fff;--ink:#1b2430;--mute:#6b7683;--ok:#1f8a4c;--no:#b3432f;--line:#d9dde2;--acc:#1f2a37;--accfg:#fff;--head:#1f2a37;--warn:#d98a1c;--info:#3b82f6}
-:root[data-theme="dark"]{--bg:#0e1116;--card:#181c23;--ink:#e8ecf2;--mute:#8b95a3;--ok:#34c27a;--no:#ef6a55;--line:#272d37;--acc:#4c8dff;--accfg:#fff;--head:#12161c;--warn:#f0a63a;--info:#4c8dff;color-scheme:dark}
-:root[data-theme="green"]{--bg:#0b130e;--card:#121c15;--ink:#e6f0e8;--mute:#86a08c;--ok:#6fd58a;--no:#ef6a55;--line:#1f2e24;--acc:#b5de45;--accfg:#10200f;--head:#0f1a12;--warn:#f0c04a;--info:#6fd58a;color-scheme:dark}
+:root{--bg:#eef0f2;--card:#fff;--ink:#1b2430;--mute:#6b7683;--ok:#1f8a4c;--no:#b3432f;--line:#d9dde2;--acc:#1f2a37;--accfg:#fff;--head:#1f2a37;--warn:#d98a1c;--info:#3b82f6;--okbg:#e3f4ea;--nobg:#fbe9e5}
+:root[data-theme="dark"]{--bg:#0e1116;--card:#181c23;--ink:#e8ecf2;--mute:#8b95a3;--ok:#34c27a;--no:#ef6a55;--line:#272d37;--acc:#4c8dff;--accfg:#fff;--head:#12161c;--warn:#f0a63a;--info:#4c8dff;--okbg:rgba(52,194,122,.16);--nobg:rgba(239,106,85,.16);color-scheme:dark}
+:root[data-theme="green"]{--bg:#0b130e;--card:#121c15;--ink:#e6f0e8;--mute:#86a08c;--ok:#6fd58a;--no:#ef6a55;--line:#1f2e24;--acc:#b5de45;--accfg:#10200f;--head:#0f1a12;--warn:#f0c04a;--info:#6fd58a;--okbg:rgba(111,213,138,.16);--nobg:rgba(239,106,85,.16);color-scheme:dark}
 *{box-sizing:border-box}
 html,body{overflow-x:hidden}
 body{margin:0;font:1rem/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
@@ -54,7 +54,7 @@ input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;ma
 .btnl{display:block;text-align:center;text-decoration:none;background:var(--acc);color:var(--accfg);padding:12px;border-radius:10px;margin-bottom:8px}
 .toast{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));max-width:616px;margin:0 auto;background:#2b3340;color:#fff;padding:12px 14px;border-radius:12px;z-index:30;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 .log{padding:8px 0;border-bottom:1px solid var(--line);font-size:0.9375rem}
-.log span{color:var(--mute);font-size:0.8125rem;display:block}
+.log .lm{color:var(--mute);font-size:0.8125rem;display:block}
 .err{color:var(--no);margin:6px 0;min-height:20px}
 .hide{display:none!important}
 h2{font-size:1rem;margin:0 0 10px}
@@ -111,21 +111,48 @@ input[type=range]{padding:0;margin:8px 0;accent-color:var(--acc)}
 .st-gold{background-image:linear-gradient(90deg,#b8860b,#ffd700,#fff3a0,#ffd700,#b8860b);background-size:200% 100%}
 .st-neon{color:#fff;text-shadow:0 0 4px var(--nc),0 0 10px var(--nc),0 0 20px var(--nc)}
 :root[data-theme="light"] .st-neon{color:var(--nc);text-shadow:0 0 5px var(--nc)}
-@media (prefers-reduced-motion:reduce){.st-anim{animation:none}}
+@media (prefers-reduced-motion:reduce){.st-anim,.sk{animation:none}}
+header h1{display:flex;align-items:center;gap:8px;flex:none;white-space:nowrap}header img{width:28px;height:28px;border-radius:7px;flex:none}
+header small#who{flex:1;min-width:0;text-align:right;font-size:.82rem;line-height:1.25}
+.p .t .nk{font-weight:500}
+.tabs{position:sticky;top:var(--hh,56px);z-index:4;background:var(--bg);padding:8px 0;margin:-4px 0 6px}
+.st{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.78rem}
+.in .st{background:var(--okbg)}.out .st{background:var(--nobg)}
+.p{box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.chk{transition:background .15s,border-color .15s,transform .1s}.chk:active{transform:scale(.9)}
+.meter{display:block;margin:2px 0 12px}.meter b{display:block;font-size:1.05rem;margin-bottom:6px}
+.meter i{display:block;height:8px;border-radius:4px;background:var(--line);overflow:hidden}.meter s{display:block;height:100%;background:var(--ok);border-radius:4px;transition:width .4s}
+.sk{height:72px;border-radius:10px;margin-bottom:8px;background:linear-gradient(90deg,var(--card),var(--line),var(--card));background-size:200% 100%;animation:shim 1.4s linear infinite}
+.toast{animation:tin .2s}@keyframes tin{from{opacity:0;transform:translateY(-8px)}}
+#off{background:var(--warn);color:#000;text-align:center;padding:6px 10px;font-size:.85rem}
+.dsep{font-size:.78rem;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 2px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+#admin>.box>h2:first-child{cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#admin>.box>h2:first-child:after{content:'▾';opacity:.6;transition:transform .15s}
+#admin>.box.col>h2:first-child{margin-bottom:0}
+#admin>.box.col>h2:first-child:after{transform:rotate(-90deg)}
+#admin>.box.col>:not(h2:first-child){display:none!important}
+.logo{display:block;width:72px;height:72px;border-radius:18px;margin:0 auto 10px}
+.pw1{position:relative}.pw1 input{padding-right:48px}.pw1 button{position:absolute;right:4px;top:4px;background:transparent;color:var(--mute);padding:6px 10px;min-height:0}
+#q{margin-bottom:8px}
 </style>
 </head>
 <body>
-<header><h1>Кто на месте</h1><small id="who"></small><button class="ghost sm" id="thm" title="Сменить тему">🌙</button></header>
+<header><h1><img src="icon-192.png" alt="">Кто на месте</h1><small id="who"></small><button class="ghost sm" id="thm" title="Сменить тему">🌙</button></header>
+<div id="off" class="hide">⚠ Нет связи: показаны сохранённые данные</div>
 <main>
 
 <div id="auth" class="box hide">
-  <h2 id="atitle">Вход</h2>
+  <img class="logo" src="icon-192.png" alt="">
+  <h2 id="atitle" style="text-align:center">Вход</h2>
+  <div class="cnt hide" id="reghint" style="text-align:center">Нужны ваша почта и код приглашения от администратора.</div>
   <input id="name" placeholder="Ваше имя (для логов)" class="hide">
-  <input id="code" placeholder="Код приглашения (его выдаёт админ)" class="hide" autocomplete="off">
+  <input id="code" placeholder="Код приглашения" class="hide" autocomplete="off">
   <input id="email" type="email" placeholder="Email" autocomplete="username">
-  <input id="pass" type="password" placeholder="Пароль (мин. 6 символов)" autocomplete="current-password">
+  <div class="pw1"><input id="pass" type="password" placeholder="Пароль (мин. 6 символов)" autocomplete="current-password"><button type="button" id="eye" aria-label="Показать пароль">👁</button></div>
   <div class="err" id="err"></div>
   <button id="go" style="width:100%">Войти</button>
+  <p style="text-align:center;margin:6px 0"><a href="#" id="forgot">Забыли пароль?</a></p>
   <p style="text-align:center"><a href="#" id="sw">Нет аккаунта? Зарегистрироваться</a></p>
 </div>
 
@@ -145,7 +172,8 @@ input[type=range]{padding:0;margin:8px 0;accent-color:var(--acc)}
     <button data-t="more" title="Ещё">⚙</button>
   </div>
 
-  <section id="list"><p class="cnt" id="cnt"></p><div id="events"></div>
+  <section id="list"><div id="cnt"></div><div id="events"></div>
+  <input id="q" type="search" placeholder="🔍 Поиск по фамилии" autocomplete="off">
   <div class="seg" id="flt"><button data-f="all" class="on">Все</button><button data-f="in">На месте</button><button data-f="out">Ушли</button></div>
   <div id="people"></div></section>
 
@@ -185,7 +213,7 @@ input[type=range]{padding:0;margin:8px 0;accent-color:var(--acc)}
   <section id="admin" class="hide">
     <div class="box">
       <h2>Сотрудники</h2>
-      <div style="display:flex;gap:8px"><input id="newp" placeholder="Фамилия" style="margin:0"><button id="addp">Добавить</button></div>
+      <div style="display:flex;gap:8px"><input id="newp" placeholder="Фамилии через запятую" style="margin:0"><button id="addp">Добавить</button></div>
       <div id="plist"></div>
     </div>
     <div class="box">
@@ -202,6 +230,7 @@ input[type=range]{padding:0;margin:8px 0;accent-color:var(--acc)}
     <div class="box">
       <h2>Отметки</h2>
       <button id="resetall" style="width:100%">Сбросить дату и «кто отметил» у всех</button>
+      <button id="allout" class="ghost" style="width:100%;margin-top:8px;color:var(--ink)">Отметить всех «ушёл» (конец дня)</button>
     </div>
     <div class="box">
       <h2>Частые события</h2>
@@ -314,14 +343,21 @@ const canLogs = () => me && (me.role === 'admin' || me.canLogs === true);
 function mode(reg){
   isReg = reg;
   $('atitle').textContent = reg ? 'Регистрация' : 'Вход';
-  $('name').classList.toggle('hide', !reg); $('code').classList.toggle('hide', !reg);
+  $('name').classList.toggle('hide', !reg); $('code').classList.toggle('hide', !reg); $('reghint').classList.toggle('hide', !reg); $('forgot').parentElement.classList.toggle('hide', reg);
   $('go').textContent = reg ? 'Создать аккаунт' : 'Войти';
   $('sw').textContent = reg ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться';
   $('err').textContent = '';
 }
 $('sw').onclick = e => { e.preventDefault(); mode(!isReg); };
+$('eye').onclick = () => { const i = $('pass'); i.type = i.type === 'password' ? 'text' : 'password'; $('eye').textContent = i.type === 'password' ? '👁' : '🙈'; };
+$('forgot').onclick = async e => {
+  e.preventDefault(); const em = $('email').value.trim();
+  if (!em) { $('err').style.color = ''; $('err').textContent = 'Введите почту выше и снова нажмите «Забыли пароль?»'; return; }
+  try { await auth.sendPasswordResetEmail(em); $('err').style.color = 'var(--ok)'; $('err').textContent = 'Письмо для смены пароля отправлено на ' + em; }
+  catch (x) { $('err').style.color = ''; $('err').textContent = 'Не удалось отправить письмо. Проверьте почту.'; }
+};
 $('go').onclick = async () => {
-  $('err').textContent = '';
+  $('err').textContent = ''; $('err').style.color = '';
   const email = $('email').value.trim(), pass = $('pass').value, name = $('name').value.trim();
   try {
     if (isReg) {
@@ -347,7 +383,7 @@ $('go').onclick = async () => {
 $('out').onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(u => {
-  unsubs.forEach(f => f()); unsubs = []; dataUnsubs.forEach(f => f()); dataUnsubs = []; stopAllTabs(); stopUsage(); lastSig = ''; me = null;
+  unsubs.forEach(f => f()); unsubs = []; dataUnsubs.forEach(f => f()); dataUnsubs = []; stopAllTabs(); stopUsage(); lastSig = ''; peopleLoaded = false; me = null;
   if (!u) {
     $('auth').classList.remove('hide'); $('app').classList.add('hide'); $('pending').classList.add('hide'); $('out').classList.add('hide'); $('who').textContent = '';
     return;
@@ -390,8 +426,14 @@ function needLogs(){ if (tabSubs.logs) return; tabSubs.logs = [db.collection('lo
     const items = s.docs.map(d => d.data({ serverTimestamps: 'estimate' }));
     $('lempty').classList.toggle('hide', items.length > 0);
     $('lempty').textContent = 'Записей пока нет';
-    $('logbox').innerHTML = items.map(l =>
-      `<div class="log"><b>${esc(l.name)}</b> — ${l.kind === 'note' ? (l.note ? '📝 ' + esc(l.note) : 'убрал примечание') : (l.present ? 'на месте' : 'ушёл')}<span>${fmt(l.ts && l.ts.toDate())} · отметил: ${nm(l.byName)}</span></div>`).join('');
+    let lastDay = '';
+    $('logbox').innerHTML = items.map(l => {
+      const d = l.ts && l.ts.toDate ? l.ts.toDate() : new Date(), dk = d.toDateString(), now = new Date(), y = new Date(now); y.setDate(now.getDate() - 1);
+      let sep = '';
+      if (dk !== lastDay) { lastDay = dk; sep = '<div class="dsep">' + (dk === now.toDateString() ? 'Сегодня' : dk === y.toDateString() ? 'Вчера' : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })) + '</div>'; }
+      const what = l.kind === 'note' ? (l.note ? '📝 ' + esc(l.note) : 'убрал примечание') : (l.present ? '<span class="dot" style="background:var(--ok)"></span>пришёл' : '<span class="dot" style="background:var(--no)"></span>ушёл');
+      return sep + `<div class="log"><b>${esc(l.name)}</b> — ${what}<span class="lm">${d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} · отметил: ${nm(l.byName)}</span></div>`;
+    }).join('');
   }, () => {})]; }
 function needInvites(){ if (tabSubs.invites) return; tabSubs.invites = [db.collection('invites').onSnapshot(s => { rd(s); invites = s.docs.map(d => ({ id: d.id, ...d.data() })); renderInvites(); }, () => {})]; }
 function needChats(){
@@ -417,7 +459,7 @@ function startData(){
   stopAllTabs(); dataUnsubs.forEach(f => f()); dataUnsubs = [];
   const subs = [];
   subs.push(db.collection('people').orderBy('name').onSnapshot(s => { rd(s);
-    people = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
+    people = s.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })); peopleLoaded = true;
     renderPeople(); renderAdminPeople();
   }));
   subs.push(db.collection('events').orderBy('ts','desc').onSnapshot(s => { rd(s);
@@ -443,15 +485,27 @@ function startData(){
   ensureForTab(tab);
 }
 
+let peopleLoaded = false;
+function ago(d){
+  if (!d) return '';
+  const now = new Date(), m = Math.round((now - d) / 60000), t = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  if (m < 1) return 'только что'; if (m < 60) return m + ' мин назад';
+  if (d.toDateString() === now.toDateString()) return 'сегодня ' + t;
+  const y = new Date(now); y.setDate(y.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return 'вчера ' + t;
+  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) + ' ' + t;
+}
 function renderPeople(){
+  if (!peopleLoaded) { $('cnt').innerHTML = ''; $('people').innerHTML = '<div class="sk"></div>'.repeat(4); return; }
   const inCnt = people.filter(p => p.present).length;
-  const list = flt === 'all' ? people : people.filter(p => flt === 'in' ? p.present : !p.present);
-  $('cnt').textContent = people.length ? `На месте: ${inCnt} из ${people.length}` : '';
+  const q = ($('q').value || '').trim().toLowerCase();
+  const list = (flt === 'all' ? people : people.filter(p => flt === 'in' ? p.present : !p.present)).filter(p => !q || p.name.toLowerCase().includes(q));
+  $('cnt').innerHTML = people.length ? `<span class="meter"><b>На месте: ${inCnt} из ${people.length}</b><i><s style="width:${Math.round(inCnt / people.length * 100)}%"></s></i></span>` : '';
   $('people').innerHTML = list.length ? list.map(p => `
     <div class="pw"><div class="p ${p.present ? 'in' : 'out'}">
       <button class="chk" data-id="${p.id}" aria-label="Отметить: ${esc(p.name)}">${p.present ? '✓' : ''}</button>
       <span class="n">${esc(p.name)}</span>
-      <span class="t"><span class="st">${p.present ? 'На месте' : 'Ушёл'}</span><br>${p.ts ? fmt(p.ts.toDate()) : ''}${p.by ? ' · ' + nm(p.by) : ''}</span>
+      <span class="t"><span class="st">${p.present ? 'На месте' : 'Ушёл'}</span><br>${p.ts ? ago(p.ts.toDate()) : ''}${p.by ? ' · ' + nm(p.by) : ''}</span>
     </div><div class="note" data-note="${p.id}"><span>${p.note ? '📝 ' + esc(p.note) : '+ примечание'}</span><span class="bell" data-bell="${p.id}" title="Уведомления">${isSub(p.id) ? '🔔' : '🔕'}</span></div></div>`).join('')
     : '<div class="box">Список пуст. Админ может добавить фамилии на вкладке «Админ».</div>';
 }
@@ -460,11 +514,11 @@ $('people').onclick = async e => {
   if (bl) { openBell(bl.dataset.bell); return; }
   const nt = e.target.closest('.note');
   if (nt && me) {
-    if (me.viewOnly === true && me.role !== 'admin') { alert('У вас доступ только для просмотра'); return; }
+    if (me.viewOnly === true && me.role !== 'admin') { toast('У вас доступ только для просмотра'); return; }
     openNote(nt.dataset.note); return;
   }
   const b = e.target.closest('.chk'); if (!b || !me) return;
-  if (me.viewOnly === true && me.role !== 'admin') { alert('У вас доступ только для просмотра'); return; }
+  if (me.viewOnly === true && me.role !== 'admin') { toast('У вас доступ только для просмотра'); return; }
   const p = people.find(x => x.id === b.dataset.id); if (!p) return;
   if (busy.has(p.id)) return; busy.add(p.id); setTimeout(() => busy.delete(p.id), 800);
   try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
@@ -472,18 +526,23 @@ $('people').onclick = async e => {
   batch.update(db.collection('people').doc(p.id), { present, ts: TS(), by: me.name, note: present ? '' : (p.note || '') });
   batch.set(db.collection('logs').doc(), { personId: p.id, name: p.name, present, ts: TS(), byUid: me.uid, byName: me.name });
   batch.set(db.collection('stats').doc(me.uid), { name: me.name, count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-  try { await batch.commit(); push(p.id, p.name + (present ? ' — пришёл' : ' — ушёл'), 'Отметил: ' + me.name + (!present && p.note ? ' · ' + p.note : ''), present); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
+  try { await batch.commit(); toast((present ? '✓ ' : '↩ ') + p.name + (present ? ' — на месте' : ' — ушёл'), 1800); push(p.id, p.name + (present ? ' — пришёл' : ' — ушёл'), 'Отметил: ' + me.name + (!present && p.note ? ' · ' + p.note : ''), present); } catch (err) { alert('Не удалось сохранить: ' + err.message); }
 };
 
 // ---------- админка ----------
 function renderAdminPeople(){
   if (!isAdmin()) return;
-  $('plist').innerHTML = people.map(p => `<div class="row"><span class="g">${esc(p.name)}</span><button class="ghost sm" data-ren="${p.id}">Изменить</button><button class="ghost sm" data-rs="${p.id}">Сброс</button><button class="ghost sm" data-del="${p.id}">Удалить</button></div>`).join('');
+  $('plist').innerHTML = people.map(p => `<div class="row"><span class="g">${esc(p.name)}</span><span class="btns" style="flex-wrap:nowrap"><button class="ghost sm" data-ren="${p.id}" title="Изменить">✎</button><button class="ghost sm" data-rs="${p.id}" title="Сбросить дату и «кто отметил»">↺</button><button class="ghost sm" data-del="${p.id}" title="Удалить" style="color:var(--no)">✕</button></span></div>`).join('');
 }
 $('addp').onclick = async () => {
-  const n = $('newp').value.trim(); if (!n) return;
-  await db.collection('people').add({ name: n, present: false, ts: null, by: '' });
-  $('newp').value = '';
+  const names = $('newp').value.split(/[,;\n]+/).map(x => x.trim()).filter(Boolean); if (!names.length) return;
+  try { const b = db.batch(); names.forEach(n => b.set(db.collection('people').doc(), { name: n, present: false, ts: null, by: '' })); await b.commit(); $('newp').value = ''; toast('Добавлено: ' + names.length); }
+  catch (err) { toast('Не удалось: ' + err.message); }
+};
+$('allout').onclick = async () => {
+  if (!people.length || !confirm('Отметить всех как «ушёл»?')) return;
+  try { const b = db.batch(); people.forEach(p => { if (p.present) b.update(db.collection('people').doc(p.id), { present: false, ts: TS(), by: me.name, note: '' }); }); await b.commit(); toast('Готово'); }
+  catch (err) { toast('Не удалось: ' + err.message); }
 };
 $('newp').onkeydown = e => { if (e.key === 'Enter') $('addp').click(); };
 $('plist').onclick = async e => {
@@ -521,38 +580,7 @@ $('clr').onclick = async () => {
   $('clrmsg').textContent = 'Удалено записей: ' + s.size;
 };
 
-let watch = new Set(), prevState = null;
-try { watch = new Set(JSON.parse(localStorage.getItem('watch') || '[]')); } catch (e) {}
-function toast(t){ const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 5000); }
-function notify(text){
-  toast(text);
-  try { if (navigator.vibrate) navigator.vibrate(200); } catch (e) {}
-  if ('Notification' in window && Notification.permission === 'granted') {
-    const o = { body: text, icon: 'icon-192.png', tag: 'ktm' + Date.now() };
-    const fb = () => { try { new Notification('Кто на месте', o); } catch (e) {} };
-    if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r => r.showNotification('Кто на месте', o)).catch(fb); else fb();
-  }
-}
-function toggleBell(id){
-  if (watch.has(id)) watch.delete(id);
-  else {
-    watch.add(id);
-    if ('Notification' in window) {
-      if (Notification.permission === 'default') Notification.requestPermission();
-      else if (Notification.permission === 'denied') toast('Уведомления запрещены в настройках телефона. Внутри приложения оповещение будет показано.');
-    }
-  }
-  try { localStorage.setItem('watch', JSON.stringify([...watch])); } catch (e) {}
-  renderPeople();
-}
-function checkAlerts(list){
-  const cur = {}; list.forEach(p => cur[p.id] = !!p.present);
-  if (prevState) list.forEach(p => {
-    if (watch.has(p.id) && prevState[p.id] !== undefined && prevState[p.id] !== cur[p.id] && !(me && p.by === me.name))
-      notify(p.name + (cur[p.id] ? ' — пришёл' : ' — ушёл') + (p.by ? ' (отметил: ' + p.by + ')' : ''));
-  });
-  prevState = cur;
-}
+function toast(t, ms){ const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), ms || 5000); }
 let cfg = null, bellTopic = '';
 const topic = id => 'ktm-' + cfg.prefix + '-' + id;
 let lastSt = null, bellId = null, mySubs = new Set();
@@ -706,7 +734,7 @@ $('evt').addEventListener('keydown', e => { if (e.key === 'Enter') $('evx').focu
 $('evx').addEventListener('keydown', e => { if (e.key === 'Enter') $('evs').click(); });
 ['nm', 'em', 'bm', 'cam', 'sm'].forEach(id => $(id).addEventListener('click', e => { if (e.target === $(id)) $(id).classList.add('hide'); }));
 $('out2').onclick = () => $('out').click();
-const APP_VER = '2026-10-09.6';
+const APP_VER = '2026-10-09.7';
 let invites = [], colors = {}, prof = {};
 const randCode = () => { const a = new Uint8Array(6); crypto.getRandomValues(a); return Array.from(a, x => 'abcdefghjkmnpqrstuvwxyz23456789'[x % 31]).join(''); };
 function renderInvites(){
@@ -1050,6 +1078,20 @@ $('nms').onclick = async () => {
 
 mode(false);
 renderStatus(); updateBellUi(); applyTheme(); renderEvents(); applySettings(); $('ver').textContent = APP_VER;
+$('q').addEventListener('input', renderPeople);
+setInterval(() => { if (!document.hidden && tab === 'list') renderPeople(); }, 60000);
+const setOff = () => $('off').classList.toggle('hide', navigator.onLine);
+window.addEventListener('online', setOff); window.addEventListener('offline', setOff); setOff();
+try { const hd = document.querySelector('header'), setHH = () => document.documentElement.style.setProperty('--hh', hd.offsetHeight + 'px'); setHH(); new ResizeObserver(setHH).observe(hd); } catch (e) {}
+(function(){
+  let st = {}; try { st = JSON.parse(localStorage.getItem('acc') || '{}'); } catch (e) {}
+  document.querySelectorAll('#admin > .box').forEach(b => {
+    const h = b.querySelector(':scope > h2'); if (!h) return;
+    const key = h.textContent.trim(), def = ['Сотрудники', 'Приглашения', 'Пользователи'].includes(key);
+    if (st[key] === undefined ? !def : st[key]) b.classList.add('col');
+    h.addEventListener('click', () => { b.classList.toggle('col'); st[key] = b.classList.contains('col'); try { localStorage.setItem('acc', JSON.stringify(st)); } catch (e) {} });
+  });
+})();
 if ('serviceWorker' in navigator) {
   const hadCtl = !!navigator.serviceWorker.controller; let reloaded = false;
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
